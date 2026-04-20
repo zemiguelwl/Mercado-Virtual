@@ -135,7 +135,7 @@ async function createQuickClient(req, res) {
 }
 
 async function validateCoupon(req, res) {
-  const result = await validateAndApply(req.query.code || "", req.session.user.supermarketId, Number(req.query.subtotal || 0));
+  const result = await validateAndApply(String(req.query.code || "", req.session.user.supermarketId, Number(req.query.subtotal || 0)));
   if (result.valid) {
     return res.json({
       valid: true,
