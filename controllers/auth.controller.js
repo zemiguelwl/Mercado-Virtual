@@ -43,7 +43,6 @@ async function register(req, res) {
     // se a conta existente não tinha password (criada no POS), forçar role client
     // isto impede que um registo via POS converta um cliente POS num supermercado ou estafeta
     user.role = existingUser.password ? role : "client";
-    user.role = role;
     user.accountStatus = "ACTIVE";
     user.isActive = true;
     await user.save();
