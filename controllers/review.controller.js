@@ -42,40 +42,46 @@ async function submitReview(req, res) {
     return res.redirect(`/supermarket/orders/${orderId}`);
   }
 
-  const existingSM = await Review.findOne({ order: orderId, targetType: "supermarket" });
-  if (!existingSM && supermarketRating) {
-    await Review.create({
-      order: orderId,
-      author: { name: order.client.name, userId: order.client.userId },
-      targetType: "supermarket",
-      targetId: order.supermarket._id,
-      rating: parseInt(supermarketRating, 10),
-      comment: supermarketComment || ""
-    });
-    await recalculateSupermarketRating(order.supermarket._id);
-  }
+  try {
+    const existingSM = await Review.findOne({ order: orderId, targetType: "supermarket" });
+    if (!existingSM && supermarketRating) {
+      await Review.create({
+        order: orderId,
+        author: { name: order.client.name, userId: order.client.userId },
+        targetType: "supermarket",
+        targetId: order.supermarket._id,
+        rating: parseInt(supermarketRating, 10),
+        comment: supermarketComment || ""
+      });
+      await recalculateSupermarketRating(order.supermarket._id);
+    }
 
-  if (order.deliveryMethod === "courier" && courierRating) {
-    const delivery = await Delivery.findOne({ order: orderId }).sort({ createdAt: -1 });
-    if (delivery?.courier) {
-      const existingCourier = await Review.findOne({ order: orderId, targetType: "courier" });
-      if (!existingCourier) {
-        await Review.create({
-          order: orderId,
-          author: { name: order.client.name, userId: order.client.userId },
-          targetType: "courier",
-          targetId: delivery.courier,
-          rating: parseInt(courierRating, 10),
-          comment: courierComment || ""
-        });
-        await recalculateCourierRating(delivery.courier);
+    if (order.deliveryMethod === "courier" && courierRating) {
+      const delivery = await Delivery.findOne({ order: orderId }).sort({ createdAt: -1 });
+      if (delivery?.courier) {
+        const existingCourier = await Review.findOne({ order: orderId, targetType: "courier" });
+        if (!existingCourier) {
+          await Review.create({
+            order: orderId,
+            author: { name: order.client.name, userId: order.client.userId },
+            targetType: "courier",
+            targetId: delivery.courier,
+            rating: parseInt(courierRating, 10),
+            comment: courierComment || ""
+          });
+          await recalculateCourierRating(delivery.courier);
+        }
       }
     }
-  }
 
-  await Order.findByIdAndUpdate(orderId, { reviewSubmitted: true });
-  req.flash("success", "Avaliação registada com sucesso.");
-  return res.redirect(`/supermarket/orders/${orderId}`);
+    await Order.findByIdAndUpdate(orderId, { reviewSubmitted: true });
+    req.flash("success", "Avaliação registada com sucesso.");
+    return res.redirect(`/supermarket/orders/${orderId}`);
+  } catch (err) {
+    console.error("submitReview:", err.message);
+    req.flash("error", "Erro ao registar avaliação. Tenta novamente.");
+    return res.redirect(`/supermarket/orders/${orderId}`);
+  }
 }
 
 module.exports = { submitReview };
