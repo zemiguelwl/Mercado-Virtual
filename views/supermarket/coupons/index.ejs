@@ -1,35 +1,83 @@
-<p class="mb-2"><a href="/supermarket/dashboard">← Voltar ao dashboard</a></p>
-<h2>Cupões do Supermercado</h2>
-<%- include('../../partials/flash') %>
-<a href="/supermarket/coupons/create">Criar novo cupão</a>
-<form method="post" action="/supermarket/coupons">
-  <input name="code" placeholder="Código" required>
-  <input name="description" placeholder="Descrição">
-  <select name="discountType">
-    <option value="percentage">Percentagem no subtotal</option>
-    <option value="fixed_shipping">Entrega gratuita</option>
-  </select>
-  <input name="discountValue" type="number" step="0.01" required title="Para entrega grátis: 0">
-  <input name="minOrderValue" type="number" step="0.01" value="0">
-  <input name="maxUses" type="number" value="0" title="0 = ilimitado">
-  <input name="validFrom" type="date" required>
-  <input name="validUntil" type="date" required>
-  <button>Criar</button>
-</form>
-<ul>
-  <% coupons.forEach(c => { %>
-    <li>
-      <strong><%= c.code %></strong> | <%= c.description || 'Sem descrição' %> | <%= c.discountType === 'fixed_shipping' ? 'entrega grátis' : c.discountValue + '%' %> |
-      <%= c.isActive ? 'ativo' : 'inativo' %> |
-      usos <%= c.currentUses %>/<%= c.maxUses == null ? '∞' : c.maxUses %> |
-      enviados <%= (c.sentToUsers && c.sentToUsers.length) || 0 %>
-      <form method="post" action="/supermarket/coupons/<%= c._id %>?_method=PUT" style="display:inline">
-        <input name="discountValue" type="number" step="0.01" value="<%= c.discountValue %>" style="width:80px">
-        <button>Atualizar valor</button>
-      </form>
-      <form method="post" action="/supermarket/coupons/<%= c._id %>?_method=DELETE" style="display:inline">
-        <button>Desativar</button>
-      </form>
-    </li>
-  <% }) %>
-</ul>
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Cupões do supermercado</h1>
+    <p class="bo-page-subtitle">Criação e manutenção de campanhas próprias.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/supermarket/coupons/create" class="btn btn-primary btn-sm">Criar cupão</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <% if (locals.coupons && locals.coupons.length) { %>
+      <div class="vstack gap-3">
+        <% locals.coupons.forEach((c) => { %>
+          <div class="border rounded p-3">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+              <div>
+                <div class="fw-semibold"><%= c.code %></div>
+                <div class="small text-muted"><%= c.description || "Sem descrição" %></div>
+              </div>
+              <span class="badge text-bg-<%= c.isActive ? 'success' : 'secondary' %>"><%= c.isActive ? "Ativo" : "Inativo" %></span>
+            </div>
+
+            <div class="row g-2 small text-muted mt-2">
+              <div class="col-12 col-md-3">Tipo: <strong><%= c.discountType %></strong></div>
+              <div class="col-12 col-md-3">Valor: <strong><%= c.discountType === "percentage" ? `${c.discountValue}%` : c.discountType === "fixed_amount" ? `€${Number(c.discountValue || 0).toFixed(2)}` : "Entrega grátis" %></strong></div>
+              <div class="col-12 col-md-3">Usos: <strong><%= c.currentUses %>/<%= c.maxUses == null ? "∞" : c.maxUses %></strong></div>
+              <div class="col-12 col-md-3">Enviados: <strong><%= (c.sentToUsers && c.sentToUsers.length) || 0 %></strong></div>
+            </div>
+
+            <details class="mt-3">
+              <summary class="small fw-semibold text-primary">Editar cupão</summary>
+              <form method="POST" action="/supermarket/coupons/<%= c._id %>?_method=PUT" class="row g-2 mt-2">
+                <div class="col-12 col-md-3">
+                  <label class="form-label small">Descrição</label>
+                  <input class="form-control form-control-sm" name="description" value="<%= c.description || '' %>">
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Tipo</label>
+                  <select class="form-select form-select-sm" name="discountType">
+                    <option value="percentage" <%= c.discountType === "percentage" ? "selected" : "" %>>Percentagem</option>
+                    <option value="fixed_amount" <%= c.discountType === "fixed_amount" ? "selected" : "" %>>Valor fixo</option>
+                    <option value="fixed_shipping" <%= c.discountType === "fixed_shipping" ? "selected" : "" %>>Entrega grátis</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Desconto</label>
+                  <input class="form-control form-control-sm" type="number" step="0.01" name="discountValue" value="<%= c.discountValue %>" required>
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Mínimo</label>
+                  <input class="form-control form-control-sm" type="number" step="0.01" name="minOrderValue" value="<%= c.minOrderValue || 0 %>">
+                </div>
+                <div class="col-6 col-md-1">
+                  <label class="form-label small">Max</label>
+                  <input class="form-control form-control-sm" type="number" name="maxUses" value="<%= c.maxUses == null ? '' : c.maxUses %>">
+                </div>
+                <div class="col-6 col-md-1">
+                  <label class="form-label small">De</label>
+                  <input class="form-control form-control-sm" type="date" name="validFrom" value="<%= new Date(c.validFrom).toISOString().slice(0, 10) %>" required>
+                </div>
+                <div class="col-6 col-md-1">
+                  <label class="form-label small">Até</label>
+                  <input class="form-control form-control-sm" type="date" name="validUntil" value="<%= new Date(c.validUntil).toISOString().slice(0, 10) %>" required>
+                </div>
+                <div class="col-12 col-md-2 d-grid">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Guardar</button>
+                </div>
+              </form>
+            </details>
+
+            <form method="POST" action="/supermarket/coupons/<%= c._id %>?_method=DELETE" class="mt-2">
+              <button class="btn btn-sm btn-outline-danger" type="submit">Desativar</button>
+            </form>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="text-muted mb-0">Ainda não existem cupões criados.</p>
+    <% } %>
+  </div>
+</div>

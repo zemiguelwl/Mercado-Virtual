@@ -1,46 +1,59 @@
-<p class="mb-2"><a href="/supermarket/dashboard">← Voltar ao dashboard</a></p>
-<h2>POS / Caixa</h2>
-<%- include('../../partials/flash') %>
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">POS / Caixa</h1>
+    <p class="bo-page-subtitle">Registo de vendas presenciais e checkout rápido.</p>
+  </div>
+</div>
 
 <form method="post" action="/supermarket/pos/checkout" id="posCheckoutForm">
   <input type="hidden" name="itemsJson" id="itemsJson">
   <input type="hidden" name="clientId" id="clientIdHidden">
   <input type="hidden" name="couponCode" id="couponCodeHidden">
 
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start">
+  <div class="row g-3 align-items-start">
     <!-- PRODUTOS -->
-    <section>
-      <h4>Produtos</h4>
+    <section class="col-12 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+      <h2 class="h5">Produtos</h2>
       <input id="productSearch" class="form-control mb-2" placeholder="Pesquisar produto...">
       <select id="productCategory" class="form-select mb-2">
         <option value="">Todas categorias</option>
-        <% (categories || []).forEach(c => { %>
+        <% (locals.categories || []).forEach(c => { %>
           <option value="<%= c._id %>"><%= c.name %></option>
         <% }) %>
       </select>
-      <div id="productsList" class="pos-products-grid" style="display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+      <div id="productsList" class="pos-products-grid"></div>
+        </div>
+      </div>
     </section>
 
     <!-- CARRINHO -->
-    <section>
-      <h4>Carrinho</h4>
+    <section class="col-12 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+      <h2 class="h5">Carrinho</h2>
       <div id="cartItems" style="max-height: 400px; overflow-y: auto; margin-bottom: 10px;"></div>
       
       <hr>
       <p>Subtotal: €<span id="subtotalValue">0.00</span></p>
       <p>Desconto: €<span id="discountValue">0.00</span></p>
-      <p><strong>Total: €<span id="totalValue">0.00</span></strong></p>
+      <p class="fw-semibold">Total: €<span id="totalValue">0.00</span></p>
 
       <div class="mt-2">
         <input id="couponCodeInput" class="form-control" placeholder="Código cupão">
         <button type="button" id="applyCouponBtn" class="btn btn-outline-primary mt-2 w-100">Aplicar</button>
         <small id="couponMessage" class="d-block mt-1"></small>
       </div>
+        </div>
+      </div>
     </section>
 
     <!-- CLIENTE E CHECKOUT -->
-    <section>
-      <h4>Cliente</h4>
+    <section class="col-12 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+      <h2 class="h5">Cliente e checkout</h2>
 
       <!-- PESQUISA DE CLIENTE -->
       <div class="mb-3">
@@ -76,7 +89,9 @@
         <button type="button" id="submitCreateClientBtn" class="btn btn-sm btn-success w-100">Criar</button>
       </div>
 
-      <button class="btn btn-primary w-100 mt-3" id="checkoutBtn" disabled>Finalizar Venda</button>
+      <button class="btn btn-primary w-100 mt-3" id="checkoutBtn" disabled>Finalizar venda</button>
+        </div>
+      </div>
     </section>
   </div>
 </form>

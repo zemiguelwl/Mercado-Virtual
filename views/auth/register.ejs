@@ -1,23 +1,119 @@
-<!doctype html>
-<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Registo</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head>
-<body class="bg-light"><div class="container py-5"><div class="row justify-content-center"><div class="col-md-7"><div class="card"><div class="card-body">
-<h3>Registo</h3>
-<%- include('../partials/flash') %>
-<% if (errors && errors.length) { %><div class="alert alert-danger"><ul><% errors.forEach(e => { %><li><%= e.msg %></li><% }) %></ul></div><% } %>
-<form method="post" action="/auth/register">
-  <div class="row"><div class="col-md-6 mb-2"><input class="form-control" name="name" placeholder="Nome" value="<%= formData?.name || '' %>" required></div>
-  <div class="col-md-6 mb-2"><input class="form-control" type="email" name="email" placeholder="Email" value="<%= formData?.email || '' %>" required></div></div>
-  <div class="row"><div class="col-md-6 mb-2"><input class="form-control" type="password" name="password" placeholder="Password" required></div>
-  <div class="col-md-6 mb-2"><input class="form-control" type="password" name="passwordConfirm" placeholder="Confirmar password" required></div></div>
-  <div class="row"><div class="col-md-6 mb-2"><input class="form-control" name="phone" placeholder="Telefone" value="<%= formData?.phone || '' %>" required></div>
-  <div class="col-md-6 mb-2"><input class="form-control" name="address" placeholder="Morada" value="<%= formData?.address || '' %>" required></div></div>
-  <div class="mb-2">
-    <label class="d-block"><input type="radio" name="role" value="client" checked> Cliente (comprar online)</label>
-    <label class="d-block mt-1"><input type="radio" name="role" value="supermarket"> Supermercado</label>
-    <label class="d-block mt-1"><input type="radio" name="role" value="courier"> Estafeta</label>
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-9 col-xl-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="h3 mb-2">Criar conta</h1>
+        <p class="text-muted mb-4">Preenche os teus dados para começares a usar a plataforma.</p>
+
+        <% if (locals.errors && locals.errors.length) { %>
+          <div class="alert alert-danger" role="alert">
+            <p class="fw-semibold mb-2">Verifica os seguintes campos:</p>
+            <ul class="mb-0 ps-3">
+              <% locals.errors.forEach((err) => { %>
+                <li><%= err.msg %></li>
+              <% }) %>
+            </ul>
+          </div>
+        <% } %>
+
+        <form method="POST" action="/auth/register" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="name" class="form-label">Nome</label>
+              <input
+                id="name"
+                class="form-control"
+                name="name"
+                value="<%= (locals.formData && locals.formData.name) || '' %>"
+                required
+              >
+            </div>
+
+            <div class="col-md-6">
+              <label for="email" class="form-label">Email</label>
+              <input
+                id="email"
+                class="form-control"
+                type="email"
+                name="email"
+                value="<%= (locals.formData && locals.formData.email) || '' %>"
+                autocomplete="email"
+                required
+              >
+            </div>
+
+            <div class="col-md-6">
+              <label for="password" class="form-label">Password</label>
+              <input id="password" class="form-control" type="password" name="password" autocomplete="new-password" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="passwordConfirm" class="form-label">Confirmar password</label>
+              <input id="passwordConfirm" class="form-control" type="password" name="passwordConfirm" autocomplete="new-password" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="phone" class="form-label">Telefone</label>
+              <input
+                id="phone"
+                class="form-control"
+                name="phone"
+                value="<%= (locals.formData && locals.formData.phone) || '' %>"
+                required
+              >
+            </div>
+
+            <div class="col-md-6">
+              <label for="address" class="form-label">Morada</label>
+              <input
+                id="address"
+                class="form-control"
+                name="address"
+                value="<%= (locals.formData && locals.formData.address) || '' %>"
+                required
+              >
+            </div>
+          </div>
+
+          <% const selectedRole = (locals.formData && locals.formData.role) || "client"; %>
+          <fieldset class="mt-4">
+            <legend class="form-label fw-semibold mb-2">Tipo de conta</legend>
+            <div class="d-flex flex-column gap-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role" id="roleClient" value="client" <%= selectedRole === "client" ? "checked" : "" %>>
+                <label class="form-check-label" for="roleClient">Cliente (comprar online)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role" id="roleSupermarket" value="supermarket" <%= selectedRole === "supermarket" ? "checked" : "" %>>
+                <label class="form-check-label" for="roleSupermarket">Supermercado</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role" id="roleCourier" value="courier" <%= selectedRole === "courier" ? "checked" : "" %>>
+                <label class="form-check-label" for="roleCourier">Estafeta</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="mt-3 <%= selectedRole === 'supermarket' ? '' : 'd-none' %>" id="supermarketNameWrap">
+            <label for="supermarketName" class="form-label">Nome do supermercado</label>
+            <input
+              id="supermarketName"
+              class="form-control"
+              name="supermarketName"
+              value="<%= (locals.formData && locals.formData.supermarketName) || '' %>"
+            >
+          </div>
+
+          <button type="submit" class="btn btn-success mt-4 w-100">Registar</button>
+        </form>
+
+        <p class="mt-4 mb-0 text-center">
+          Já tens conta?
+          <a href="/auth/login">Fazer login</a>
+        </p>
+      </div>
+    </div>
   </div>
-  <div class="mb-3" id="supermarketNameWrap" style="display:none"><input class="form-control" name="supermarketName" placeholder="Nome do supermercado"></div>
-  <button class="btn btn-success">Registar</button>
-</form>
+</div>
+
 <script src="/javascripts/register.js"></script>
-</div></div></div></div></div></body></html>

@@ -81,7 +81,7 @@ async function getOrdersByDateRange(startDate, endDate) {
  *   const orderCtrl = require('../controllers/order.controller');
  *   router.get('/orders/stats', orderCtrl.statsPage);
  */
-async function statsPage(req, res) {
+async function statsPage(req, res, next) {
   try {
     const [stats, revenueBySupermarket] = await Promise.all([
       getGlobalStats(),
@@ -91,6 +91,7 @@ async function statsPage(req, res) {
   } catch (err) {
     console.error("order.controller statsPage:", err.message);
     req.flash("error", "Erro ao carregar estatísticas.");
+    next(err);
     return res.redirect("/admin/orders");
   }
 }
@@ -101,13 +102,14 @@ async function statsPage(req, res) {
  *   const orderCtrl = require('../controllers/order.controller');
  *   router.get('/users/:id/orders', orderCtrl.clientHistory);
  */
-async function clientHistory(req, res) {
+async function clientHistory(req, res, next) {
   try {
     const orders = await getOrdersByClient(req.params.id);
     return res.render("admin/client-orders", { title: "Histórico do Cliente", orders, clientId: req.params.id });
   } catch (err) {
     console.error("order.controller clientHistory:", err.message);
     req.flash("error", "Erro ao carregar encomendas do cliente.");
+    next(err);
     return res.redirect("/admin/users");
   }
 }

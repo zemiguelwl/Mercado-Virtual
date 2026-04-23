@@ -25,32 +25,36 @@ const { validateAndApply } = require("../services/coupon.service");
  *  { valid: true,  discountAmount: 2.5, deliveryFree: false, description: "10% desconto" }
  *  { valid: false, message: "Cupão expirado." }
  */
-async function validateClientCoupon(req, res) {
-  const rawCode = String(req.query.code || "").trim();
-  const numSubtotal = parseFloat(req.query.subtotal) || 0;
-  const smId = req.query.supermarketId ? String(req.query.supermarketId) : null;
+async function validateClientCoupon(req, res, next) {
+  try {
+    const rawCode = String(req.query.code || "").trim();
+    const numSubtotal = parseFloat(req.query.subtotal) || 0;
+    const smId = req.query.supermarketId ? String(req.query.supermarketId) : null;
 
-  if (!rawCode) {
-    return res.json({ valid: false, message: "Introduz um código de cupão." });
-  }
+    if (!rawCode) {
+      return res.json({ valid: false, message: "Introduz um código de cupão." });
+    }
 
-  const result = await validateAndApply(rawCode, smId, numSubtotal);
+    const result = await validateAndApply(rawCode, smId, numSubtotal);
 
-  if (result.valid) {
+    if (result.valid) {
+      return res.json({
+        valid: true,
+        discountAmount: result.discountAmount,
+        deliveryFree: Boolean(result.deliveryFree),
+        description: result.description || ""
+      });
+    }
+
     return res.json({
-      valid: true,
-      discountAmount: result.discountAmount,
-      deliveryFree: Boolean(result.deliveryFree),
-      description: result.description || ""
+      valid: false,
+      discountAmount: 0,
+      deliveryFree: false,
+      message: result.message || "Cupão inválido."
     });
+  } catch (err) {
+    next(err);
   }
-
-  return res.json({
-    valid: false,
-    discountAmount: 0,
-    deliveryFree: false,
-    message: result.message || "Cupão inválido."
-  });
 }
 
 /**
@@ -106,7 +110,7 @@ async function getCouponStats() {
  * Renderiza ou devolve JSON com estatísticas dos cupões.
  * A rota correspondente pode ser adicionada a admin.routes.js se necessário.
  */
-async function statsPage(req, res) {
+async function statsPage(req, res, next) {
   try {
     const stats = await getCouponStats();
     // Os 5 cupões com mais utilizações
@@ -123,6 +127,7 @@ async function statsPage(req, res) {
   } catch (err) {
     console.error("statsPage:", err.message);
     req.flash("error", "Erro ao carregar estatísticas.");
+    next(err);
     return res.redirect("/admin/coupons");
   }
 }

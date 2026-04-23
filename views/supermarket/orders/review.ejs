@@ -1,14 +1,37 @@
-<p class="mb-2"><a href="/supermarket/orders/<%= order._id %>">← Voltar ao detalhe da encomenda</a></p>
-<h2>Registar Avaliação do Cliente</h2>
-<form method="post" action="/supermarket/orders/<%= order._id %>/review">
-  <label>Rating supermercado (1-5)</label>
-  <input name="supermarketRating" type="number" min="1" max="5" required>
-  <textarea name="supermarketComment" placeholder="Comentário"></textarea>
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Registar avaliação</h1>
+    <p class="bo-page-subtitle">Avaliação do cliente e, se aplicável, do estafeta.</p>
+  </div>
+</div>
 
-  <% if (order.deliveryMethod === 'courier' && delivery && delivery.courier) { %>
-    <label>Rating courier (1-5)</label>
-    <input name="courierRating" type="number" min="1" max="5">
-    <textarea name="courierComment" placeholder="Comentário courier"></textarea>
-  <% } %>
-  <button>Submeter avaliação</button>
-</form>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="/supermarket/orders/<%= locals.order._id %>/review" class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="supermarketRating">Rating supermercado</label>
+        <input id="supermarketRating" name="supermarketRating" type="number" min="1" max="5" class="form-control" required>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="supermarketComment">Comentário ao supermercado</label>
+        <textarea id="supermarketComment" name="supermarketComment" class="form-control" rows="3"></textarea>
+      </div>
+
+      <% if (locals.order.deliveryMethod === "courier" && locals.delivery && locals.delivery.courier) { %>
+        <div class="col-12"><hr></div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="courierRating">Rating estafeta</label>
+          <input id="courierRating" name="courierRating" type="number" min="1" max="5" class="form-control">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="courierComment">Comentário ao estafeta</label>
+          <textarea id="courierComment" name="courierComment" class="form-control" rows="3"></textarea>
+        </div>
+      <% } %>
+
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">Submeter avaliação</button>
+      </div>
+    </form>
+  </div>
+</div>
