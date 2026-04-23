@@ -1,7 +1,7 @@
 # Mercadinho Virtual
 
-> Trabalho Prático — Programação em Ambiente Web (PAW)
-> ESTG — Instituto Politécnico do Porto
+> Trabalho Prático - Programação em Ambiente Web (PAW)
+> ESTG - Instituto Politécnico do Porto
 > **Estado:** Em desenvolvimento
 
 ---
@@ -42,6 +42,29 @@ Este projeto é desenvolvido no âmbito da unidade curricular de **Programação
 | Segurança | Helmet, express-rate-limit, express-validator |
 | Testes | Jest |
 | Desenvolvimento | Nodemon |
+
+---
+
+Este projeto utiliza a variável de ambiente `NODE_ENV` para alternar o comportamento do servidor entre os modos de **Desenvolvimento** e **Produção**. Esta configuração é essencial para garantir a segurança dos dados e a melhor performance da aplicação.
+
+### 🔄 Diferenças entre Modos
+
+| Característica | Desenvolvimento (`development`) | Produção (`production`) |
+| :--- | :--- | :--- |
+| **Tratamento de Erros** | Exibe detalhado no browser para facilitar o debug. | Exibe apenas uma mensagem genérica, ocultando detalhes técnicos do servidor. |
+| **Cookies de Sessão** | `secure: false`. Permite o login através de ligações normais (HTTP). | `secure: true`. Obriga o uso de ligações encriptadas (HTTPS). |
+| **Performance** | Motor de views (EJS) recompila ficheiros em cada pedido. | Cache de views ativa para respostas mais rápidas. |
+
+---
+
+### ⚠️ Aviso Crítico: Login em Localhost
+
+Para fins académicos e de desenvolvimento local, o ficheiro `.env` deve manter sempre `NODE_ENV=development`.
+
+Se o modo for alterado para `production` enquanto corre em `http://localhost:3000`:
+1. O servidor enviará o cookie de sessão com a flag **Secure**.
+2. O navegador, por segurança, recusará guardar o cookie pois a ligação não é HTTPS.
+3. O utilizador entrará num ciclo infinito de redirecionamento, pois o servidor não conseguirá "lembrar-se" da sessão após o login.
 
 ---
 
@@ -94,6 +117,7 @@ O `app.js` inclui um middleware que intercepta todos os `res.render()`. Se o HTM
 - Carrinho de compras (guardado na sessão)
 - Checkout com suporte a cupões de desconto
 - Histórico de encomendas e cancelamento (até 5 minutos após confirmação)
+- Avaliação de supermercado e courier após entrega
 
 ### Supermercado (`supermarket`)
 - Registo com aprovação obrigatória pelo administrador
@@ -148,7 +172,7 @@ Se `EMAIL_API_TOKEN` não estiver definido, o transporter fica `null` e todas as
 | Situação | Função | Comportamento em caso de erro |
 |----------|--------|-------------------------------|
 | Registo de utilizador | `sendVerificationEmail()` | **Bloqueia o registo** — erro crítico |
-| Reenvio de código | `sendVerificationEmail()` | Erro silencioso (não bloqueia) |
+| Reenvio de código | `sendVerificationEmail()` | Propaga para o error handler → página 500 |
 | Atualização de estado de encomenda | `sendOrderStatusUpdate()` | Erro silencioso (não bloqueia a transição) |
 | Envio de cupão | `sendCouponEmail()` | Erro silencioso por utilizador |
 
@@ -237,6 +261,8 @@ Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `e
 | GET | `/client/checkout` | Formulário de checkout |
 | POST | `/client/checkout` | Finalizar encomenda (com suporte a cupões) |
 | GET | `/client/coupons/validate` | AJAX — validar cupão antes de submeter o checkout |
+| GET | `/client/orders/:id/review` | Formulário de avaliação (requer `status: delivered`, não avaliada) |
+| POST | `/client/orders/:orderId/review` | Submeter avaliação do supermercado e/ou courier |
 
 ### Supermercado — `/supermarket` (requer login + role `supermarket` + aprovação pelo admin)
 
@@ -409,6 +435,12 @@ preparing ── (se deliveryMethod = courier) → cria Delivery { status: 'avai
 - **Encomendas POS:** São criadas diretamente com `status: 'delivered'`, com `statusHistory` completo pré-preenchido.
 - **Email em cada transição:** `sendOrderStatusUpdate()` é chamado após cada transição. Se o envio falhar, o erro é registado mas não bloqueia a transição (comportamento best-effort).
 
+### Serviços de suporte
+
+**`order.service.js`** — máquina de estados central. Todas as transições e a criação de vendas POS passam por aqui.
+
+**`delivery.service.js`** — funções auxiliares de consulta para o sistema de entregas: entrega ativa do courier, entregas disponíveis, entregas pendentes por supermercado, estatísticas de desempenho do courier e histórico. A lógica de ciclo de vida (aceitar, levantar, entregar, cancelar) está em `order.service.js`.
+
 ---
 
 ## POS — Ponto de Venda
@@ -427,7 +459,7 @@ O POS permite ao funcionário do supermercado registar vendas presenciais.
 
 ## Sistema de Avaliações
 
-As avaliações são submetidas pelo funcionário do supermercado em nome do cliente, no detalhe de uma encomenda com `status: 'delivered'`.
+As avaliações podem ser submetidas pelo **cliente** (no detalhe da sua encomenda) ou registadas pelo **funcionário do supermercado** em nome do cliente (no detalhe da encomenda recebida). Em ambos os casos, a encomenda tem de ter `status: 'delivered'` e `reviewSubmitted: false`.
 
 - Cada encomenda pode gerar no máximo **2 avaliações**: uma para o supermercado e uma para o courier (apenas se a entrega foi feita por courier)
 - O índice único `{order, targetType}` no modelo `Review` impede avaliações duplicadas
@@ -497,7 +529,7 @@ O admin pode enviar qualquer cupão global a todos os utilizadores com email ver
 - Área do supermercado: perfil, CRUD de produtos com imagem obrigatória, gestão de encomendas com máquina de estados, POS com cliente obrigatório, cupões próprios, reviews
 - Área do courier: entregas disponíveis, aceitação atómica, fluxo completo de entrega, cancelamento com devolução ao pool, histórico, reviews
 - Catálogo público com pesquisa, filtros e comparação de preços
-- Área do cliente: carrinho em sessão, checkout com cupões, histórico de encomendas, cancelamento com regra dos 5 minutos
+- Área do cliente: carrinho em sessão, checkout com cupões, histórico de encomendas, cancelamento com regra dos 5 minutos, avaliação de supermercado e courier
 - Notificações por email em cada transição de estado de encomenda (best-effort — falha não bloqueia a transição)
 - Cupão de boas-vindas `BEMVINDO10` enviado automaticamente após verificação de email
 - Envio manual de cupões globais a todos os utilizadores verificados pelo admin

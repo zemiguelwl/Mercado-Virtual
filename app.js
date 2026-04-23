@@ -88,9 +88,10 @@ app.use((req, res, next) => {
 });
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 10 * 60 * 1000, 
   max: 10,
-  message: "Demasiadas tentativas de login. Tenta novamente em 15 minutos."
+  skipSuccessfulRequests: true,
+  message: "Demasiadas tentativas de login. Tenta novamente em 5 minutos."
 });
 app.use("/auth/login", loginLimiter);
 

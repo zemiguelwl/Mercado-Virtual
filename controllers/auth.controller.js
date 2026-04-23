@@ -113,6 +113,7 @@ async function register(req, res, next) {
     } catch (err) {
       console.error("Falha ao enviar email de verificação:", err.message);
       req.flash("error", "Não foi possível enviar o código de verificação. Tenta novamente.");
+      next(err);
       return res.redirect("/auth/register");
     }
 
@@ -163,6 +164,7 @@ async function verifyEmail(req, res, next) {
         await couponService.sendWelcomeCoupon(user);
       } catch (err) {
         console.error("Falha ao enviar cupão de boas-vindas:", err.message);
+        next(err);
       }
     }
     delete req.session.pendingVerificationUserId;
@@ -211,14 +213,14 @@ async function processLogin(req, res, next) {
     // 1. Utilizador existe?
     if (!user) {
       req.flash("error", "Email ou password incorretos.");
-      return res.redirect(loginWithNext);
+      return res.status(401).redirect(loginWithNext);
     }
 
     // 2. Conta autenticável? Clientes POS têm password=null e não podem fazer login
     // Esta verificação tem de vir ANTES de comparePassword para evitar TypeError
     if (!user.password) {
       req.flash("error", "Esta conta não tem login associado. Regista-te para criar uma conta completa.");
-      return res.redirect(loginWithNext);
+      return res.status(401).redirect(loginWithNext);
     }
 
     // 3. Email verificado?
@@ -231,13 +233,13 @@ async function processLogin(req, res, next) {
     // 4. Conta ativa?
     if (!user.isActive) {
       req.flash("error", "A tua conta está desativada. Contacta o administrador.");
-      return res.redirect(loginWithNext);
+      return res.status(401).redirect(loginWithNext);
     }
 
     // 5. Password correcta? só aqui é seguro chamar comparePassword
     if (!(await user.comparePassword(password || ""))) {
       req.flash("error", "Email ou password incorretos.");
-      return res.redirect(loginWithNext);
+      return res.status(401).redirect(loginWithNext);
     }
 
     let supermarketId = null;
@@ -245,7 +247,7 @@ async function processLogin(req, res, next) {
       const supermarket = await Supermarket.findOne({ user: user._id });
       if (!supermarket || supermarket.status === "rejected") {
         req.flash("error", "A sua conta foi rejeitada. Contacte o administrador.");
-        return res.redirect(loginWithNext);
+        return res.status(401).redirect(loginWithNext);
       }
       supermarketId = supermarket?._id?.toString() || null;
       req.session.supermarketStatus = supermarket?.status || null;
