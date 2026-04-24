@@ -74,7 +74,3 @@
     </div>
   </div>
 </div>
-
-<% if (locals.order.status === "delivered" && !locals.order.reviewSubmitted) { %>
-  <a href="/supermarket/orders/<%= locals.order._id %>/review" class="btn btn-primary">Registar avaliação do cliente</a>
-<% } %>

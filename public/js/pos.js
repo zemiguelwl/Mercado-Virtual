@@ -31,11 +31,23 @@ function recalculateTotal() {
 }
 
 function syncHiddenFields() {
+  // Sincroniza Itens
   document.getElementById("itemsJson").value = JSON.stringify(
-    posState.items.map((it) => ({ productId: it.productId, quantity: it.quantity, productName: it.productName }))
+    posState.items.map((it) => ({ 
+      productId: it.productId, 
+      quantity: it.quantity, 
+      productName: it.productName 
+    }))
   );
+  
+  // Sincroniza Cupão
   document.getElementById("couponCodeHidden").value = posState.couponCode || "";
-  document.getElementById("clientIdHidden").value = posState.selectedClient?._id || "";
+  
+  // Sincroniza o ID do Cliente 
+  const clientHidden = document.getElementById("clientIdHidden");
+  if (clientHidden) {
+    clientHidden.value = posState.selectedClient ? posState.selectedClient._id : "";
+  }
 }
 
 function renderCart() {
@@ -146,29 +158,27 @@ async function loadProducts() {
 
 async function searchClient() {
   const q = document.getElementById("clientSearch").value.trim();
-  if (q.length < 2) return;
-  const res = await fetch(`/supermarket/pos/clients?q=${encodeURIComponent(q)}`);
-  const data = await res.json();
-  const wrap = document.getElementById("clientSearchResult");
-  
-  if (!data.success || !data.clients?.length) {
-    wrap.innerHTML = "<small>Cliente não encontrado.</small>";
-    return;
+  if (!q) return;
+
+  try {
+    const res = await fetch(`/supermarket/pos/clients?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    const resultDiv = document.getElementById("clientSearchResult");
+
+    if (data.success && data.clients.length > 0) {
+      resultDiv.innerHTML = '<div class="list-group mt-2">' + 
+        data.clients.map(c => `
+          <button type="button" class="list-group-item list-group-item-action" 
+            onclick='selectClient(${JSON.stringify(c)})'>
+            ${c.name} (${c.phone})
+          </button>
+        `).join('') + '</div>';
+    } else {
+      resultDiv.innerHTML = '<div class="text-danger mt-2">Nenhum cliente encontrado.</div>';
+    }
+  } catch (err) {
+    console.error("Erro na pesquisa:", err);
   }
-
-  wrap.innerHTML = data.clients
-    .map((c) => {
-      const status = c.accountStatus === "PENDING_ACTIVATION" ? " (não ativado)" : "";
-      return `<button type="button" class="btn btn-sm btn-outline-secondary" data-client='${JSON.stringify(c)}' style="margin:2px">${c.name}${status}</button>`;
-    })
-    .join("");
-
-  wrap.querySelectorAll("[data-client]").forEach((b) => {
-    b.addEventListener("click", () => {
-      const client = JSON.parse(b.dataset.client);
-      selectClient(client);
-    });
-  });
 }
 
 function selectClient(client) {
@@ -176,9 +186,12 @@ function selectClient(client) {
   document.getElementById("clientName").textContent = client.name;
   document.getElementById("clientEmail").textContent = client.email;
   document.getElementById("clientPhone").textContent = client.phone;
+  document.getElementById("selectedClientInfo").style.display = "block";
   document.getElementById("clientSearch").value = "";
   document.getElementById("clientSearchResult").innerHTML = "";
-  document.getElementById("createClientForm").style.display = "none";
+  // Se o formulário de criação estiver aberto, fecha-o
+  const createForm = document.getElementById("createClientForm");
+  if (createForm) createForm.style.display = "none";
   recalculateTotal();
   syncHiddenFields();
 }
@@ -194,7 +207,7 @@ async function createQuickClient() {
   }
 
   try {
-    const res = await fetch("/supermarket/pos/clients/create-quick", {
+    const res = await fetch("/supermarket/pos/clients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, phone })

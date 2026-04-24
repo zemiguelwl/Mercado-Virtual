@@ -77,7 +77,7 @@ async function createQuickClient(req, res, next) {
   try {
     const { name, email, phone } = req.body;
 
-    // Validação básica 
+    // Validação básica
     if (!name?.trim() || !email?.trim() || !phone?.trim()) {
       return res.json({ success: false, message: "Nome, email e telefone são obrigatórios." });
     }
@@ -85,68 +85,56 @@ async function createQuickClient(req, res, next) {
     const normalizedEmail = String(email).toLowerCase().trim();
     const normalizedPhone = String(phone).trim();
 
-    // Verificar duplicados. Se já existe um registo com este email ou telefone
-    // devolver o existente em vez de criar duplicado
-    const existingByEmail = await User.findOne({ email: normalizedEmail });
-    if (existingByEmail) {
-      // Reutilizar o registo existente, já que pode ser um cliente POS anterior ou uma conta completa.
+    // 1. Verificar se já existe um utilizador (por email ou telefone)
+    // Usamos $or para verificar ambos numa só consulta
+    const existingUser = await User.findOne({ 
+      $or: [{ email: normalizedEmail }, { phone: normalizedPhone }] 
+    });
+
+    if (existingUser) {
+      // Se já existe, devolvemos o utilizador encontrado para o POS o selecionar
       return res.json({
         success: true,
         client: {
-          _id: existingByEmail._id,
-          name: existingByEmail.name,
-          email: existingByEmail.email,
-          phone: existingByEmail.phone
+          _id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          phone: existingUser.phone
         },
-        message: "Cliente encontrado."
+        message: "Cliente já registado. Selecionado automaticamente."
       });
     }
 
-    const existingByPhone = await User.findOne({ phone: normalizedPhone });
-    if (existingByPhone) {
-      return res.json({
-        success: true,
-        client: {
-          _id: existingByPhone._id,
-          name: existingByPhone.name,
-          email: existingByPhone.email,
-          phone: existingByPhone.phone
-        },
-        message: "Cliente encontrado por telefone."
-      });
-    }
+    // 2. Criar novo cliente 
+    const newClient = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      address: "N/A",
+      password: null,       
+      role: "client",
+      isEmailVerified: false, 
+      isActive: true,
+      accountStatus: "ACTIVE"
+    });
 
-    // Criar registo de dados | sem password, sem autenticação.
-    // Este utilizador não pode fazer login. É apenas um registo para associar vendas.
-    try {
-      const newClient = await User.create({
-        name: name.trim(),
-        email: normalizedEmail,
-        phone: normalizedPhone,
-        address: "N/A",
-        password: null,           // sem password -> não autenticável
-        role: "client",
-        isEmailVerified: false,   // nunca vai verificar email por este caminho
-        isActive: true,
-        accountStatus: "ACTIVE"   // ativo para efeitos de associação a vendas
-      });
+    return res.json({
+      success: true,
+      client: {
+        _id: newClient._id,
+        name: newClient.name,
+        email: newClient.email,
+        phone: newClient.phone
+      },
+      message: "Novo cliente criado com sucesso."
+    });
 
-      return res.json({
-        success: true,
-        client: {
-          _id: newClient._id,
-          name: newClient.name,
-          email: newClient.email,
-          phone: newClient.phone
-        },
-        message: "Cliente criado."
-      });
-    } catch (err) {
-      console.error("createQuickClient:", err.message);
-      return res.json({ success: false, message: "Erro ao criar cliente. Tenta novamente." });
-    }
   } catch (err) {
-    next(err);
+    console.error("Erro em createQuickClient:", err);
+    return res.json({ 
+      success: false, 
+      message: "Erro técnico ao processar cliente. Verifique se os dados são válidos." 
+    });
   }
 }
 

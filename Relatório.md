@@ -2,18 +2,12 @@
 
 > Trabalho Prático - Programação em Ambiente Web (PAW)
 > ESTG - Instituto Politécnico do Porto
-> **Estado:** Em desenvolvimento
 
 ---
 
 ## Descrição
 
 O **Mercadinho Virtual** é uma plataforma web de marketplace para supermercados locais. O objetivo é centralizar numa só plataforma vários supermercados, permitindo que clientes pesquisem e comparem produtos, façam encomendas online, e as recebam em casa através de estafetas registados na plataforma ou as levantem diretamente na loja.
-
-A aplicação está organizada em dois grandes contextos:
-
-- **Backoffice** — área de gestão utilizada por administradores, supermercados e estafetas (Milestone 1)
-- **Frontoffice** — interface pública para clientes finais, com catálogo, carrinho e encomendas online (Milestone 2)
 
 ---
 
@@ -23,8 +17,8 @@ Este projeto é desenvolvido no âmbito da unidade curricular de **Programação
 
 | Milestone | Âmbito | Estado |
 |-----------|--------|--------|
-| Milestone 1 | Backoffice (admin, supermercado, estafeta) + POS | 🔄 Em desenvolvimento |
-| Milestone 2 | Frontoffice Angular + API REST documentada com Swagger | ⏳ Pendente |
+| Milestone 1 | Admin, supermercado, estafeta + POS 
+| Milestone 2 | Angular + API REST documentada com Swagger
 
 ---
 
@@ -51,7 +45,6 @@ Este projeto utiliza a variável de ambiente `NODE_ENV` para alternar o comporta
 
 | Característica | Desenvolvimento (`development`) | Produção (`production`) |
 | :--- | :--- | :--- |
-| **Tratamento de Erros** | Exibe detalhado no browser para facilitar o debug. | Exibe apenas uma mensagem genérica, ocultando detalhes técnicos do servidor. |
 | **Cookies de Sessão** | `secure: false`. Permite o login através de ligações normais (HTTP). | `secure: true`. Obriga o uso de ligações encriptadas (HTTPS). |
 | **Performance** | Motor de views (EJS) recompila ficheiros em cada pedido. | Cache de views ativa para respostas mais rápidas. |
 
@@ -555,3 +548,32 @@ O admin pode enviar qualquer cupão global a todos os utilizadores com email ver
 | `accountStatus` em User | Distinguir contas totalmente ativas de contas criadas no POS ainda não ativadas |
 | Cliente obrigatório no POS | Rastreabilidade total de vendas presenciais |
 | Email best-effort nas transições de estado | Uma falha de email não deve impedir a operação de negócio |
+
+---
+
+## Credenciais de Teste e Script de Seed
+
+### 🛠️ O Script `seed.js`
+O script de seed foi desenhado para criar um ambiente de teste completo e realista. Ele executa as seguintes operações:
+1.  **Limpeza Total:** Remove todos os dados existentes para evitar conflitos de IDs.
+2.  **Criação de Roles:** Instancia utilizadores com diferentes permissões (Admin, Owners, Clients).
+3.  **Cenários de Comparação:** Popula propositadamente produtos idênticos em lojas diferentes com preços distintos (ex: Leite Meio Gordo 1L). Isto permite validar o algoritmo de ordenação por preço e a funcionalidade de "Melhor Preço" no catálogo.
+
+### Administrador Geral
+| Nome | Email | Password | Telefone |
+| :--- | :--- | :--- | :--- |
+| Administrador Geral | `admin@mercadinho.pt` | `password123` | `910000000` |
+
+### Supermercados (Owners)
+| Nome | Email | Password | Estado | Telefone |
+| :--- | :--- | :--- | :--- | :--- |
+| António Silva | `antonio@gmail.com` | `password123` | Approved | `912345678` |
+| Carla Santos | `carla@gmail.com` | `password123` | Approved | `923456789` |
+| Rui Oliveira | `rui@gmail.com` | `password123` | Approved | `934567890` |
+
+### Clientes (Autenticáveis)
+| Nome | Email | Password | Telefone | Morada |
+| :--- | :--- | :--- | :--- | :--- |
+| João Pereira | `joao@hotmail.com` | `password123` | `961112233` | Rua Direita 123, Porto |
+| Sofia Martins | `sofia@sapo.pt` | `password123` | `962223344` | Avenida Central 45, Lisboa |
+| Tiago Costa | `tiago@gmail.com` | `password123` | `963334455` | Praça da Alegria 7, Braga |

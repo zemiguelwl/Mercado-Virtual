@@ -63,13 +63,6 @@
       </div>
 
       <!-- CLIENTE SELECIONADO -->
-      <% if (false) { %>
-        <div class="alert alert-info p-2" id="selectedClientInfo">
-          <strong id="clientName"></strong><br>
-          <small id="clientEmail"></small><br>
-          <small id="clientPhone"></small>
-        </div>
-      <% } %>
 
       <div class="bg-light p-3 rounded mb-3" id="selectedClientInfo" style="display:none">
         <h6>Cliente Selecionado:</h6>
@@ -83,9 +76,9 @@
       
       <div id="createClientForm" style="display:none;border:1px solid #ddd;padding:10px;border-radius:5px;margin-bottom:10px">
         <h6>Dados Cliente</h6>
-        <input id="newClientName" class="form-control form-control-sm mb-2" placeholder="Nome" required>
-        <input id="newClientEmail" class="form-control form-control-sm mb-2" placeholder="Email" type="email" required>
-        <input id="newClientPhone" class="form-control form-control-sm mb-2" placeholder="Telefone" required>
+        <input id="newClientName" class="form-control form-control-sm mb-2" placeholder="Nome">
+        <input id="newClientEmail" class="form-control form-control-sm mb-2" placeholder="Email" type="email">
+        <input id="newClientPhone" class="form-control form-control-sm mb-2" placeholder="Telefone">
         <button type="button" id="submitCreateClientBtn" class="btn btn-sm btn-success w-100">Criar</button>
       </div>
 
