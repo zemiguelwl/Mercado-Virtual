@@ -15,10 +15,10 @@ O **Mercadinho Virtual** é uma plataforma web de marketplace para supermercados
 
 Este projeto é desenvolvido no âmbito da unidade curricular de **Programação em Ambiente Web (PAW)**, seguindo a metodologia de entregas por milestones:
 
-| Milestone | Âmbito | Estado |
-|-----------|--------|--------|
-| Milestone 1 | Admin, supermercado, estafeta + POS 
-| Milestone 2 | Angular + API REST documentada com Swagger
+| Milestone | Âmbito |
+|-----------|--------|
+| Milestone 1 | Admin, supermercado, estafeta + POS |
+| Milestone 2 | Angular + API REST documentada com Swagger |
 
 ---
 
@@ -50,7 +50,7 @@ Este projeto utiliza a variável de ambiente `NODE_ENV` para alternar o comporta
 
 ---
 
-### ⚠️ Aviso Crítico: Login em Localhost
+### Aviso: Login em Localhost
 
 Para fins académicos e de desenvolvimento local, o ficheiro `.env` deve manter sempre `NODE_ENV=development`.
 
@@ -78,20 +78,19 @@ PAW2526/
 │   ├── images/
 │   ├── javascripts/
 │   └── uploads/
-│       ├── products/          ← Imagens de produtos (geridas por multer)
-│       └── supermarkets/      ← Logos de supermercados
+│       └── products/          ← Imagens de produtos 
 ├── routes/                    ← Definição de rotas por área
 ├── services/                  ← Lógica reutilizável (email, encomendas, cupões, entregas)
 ├── tests/
 └── views/                     ← Templates EJS
     ├── layouts/
-    │   └── backoffice-shell.ejs   ← Layout base injetado automaticamente
+    │   └── backoffice-shell.ejs   
     ├── partials/
     ├── admin/
     ├── auth/
     ├── catalog/
     ├── client/
-    ├── courier/
+    ├── estafeta/
     ├── errors/
     └── supermarket/
 ```
@@ -110,7 +109,7 @@ O `app.js` inclui um middleware que intercepta todos os `res.render()`. Se o HTM
 - Carrinho de compras (guardado na sessão)
 - Checkout com suporte a cupões de desconto
 - Histórico de encomendas e cancelamento (até 5 minutos após confirmação)
-- Avaliação de supermercado e courier após entrega
+- Avaliação de supermercado e estafeta após entrega
 
 ### Supermercado (`supermarket`)
 - Registo com aprovação obrigatória pelo administrador
@@ -121,7 +120,7 @@ O `app.js` inclui um middleware que intercepta todos os `res.render()`. Se o HTM
 - Gestão de cupões de desconto próprios
 - Visualização e resposta a avaliações
 
-### Estafeta (`courier`)
+### Estafeta (`estafeta`)
 - Registo com verificação de email
 - Visualização de entregas disponíveis
 - Aceitação de entregas (máximo 1 ativa em simultâneo)
@@ -158,13 +157,13 @@ A variável de ambiente necessária é `EMAIL_API_TOKEN` (token gerado no painel
 
 ### Comportamento quando não configurado
 
-Se `EMAIL_API_TOKEN` não estiver definido, o transporter fica `null` e todas as funções de envio retornam silenciosamente — **exceto** `sendVerificationEmail`, que lança erro. Isto significa que o registo de utilizadores fica bloqueado se o token não estiver configurado.
+Se `EMAIL_API_TOKEN` não estiver definido, o transporter fica `null` e todas as funções de envio retornam silenciosamente - **exceto** `sendVerificationEmail`, que lança erro. Isto significa que o registo de utilizadores fica bloqueado se o token não estiver configurado.
 
 ### Emails enviados
 
 | Situação | Função | Comportamento em caso de erro |
 |----------|--------|-------------------------------|
-| Registo de utilizador | `sendVerificationEmail()` | **Bloqueia o registo** — erro crítico |
+| Registo de utilizador | `sendVerificationEmail()` | **Bloqueia o registo** - erro crítico |
 | Reenvio de código | `sendVerificationEmail()` | Propaga para o error handler → página 500 |
 | Atualização de estado de encomenda | `sendOrderStatusUpdate()` | Erro silencioso (não bloqueia a transição) |
 | Envio de cupão | `sendCouponEmail()` | Erro silencioso por utilizador |
@@ -180,44 +179,44 @@ Emails só são enviados se `order.client.email` existir.
 ## Modelos de Dados
 
 ### `User`
-Campos principais: `name`, `email` (único), `password` (hash bcrypt), `phone`, `address`, `role` (admin / supermarket / courier / client), `isActive`, `isEmailVerified`, `accountStatus` (enum: ACTIVE / INACTIVE), `welcomeCouponSent` (boolean), `rating` (average + count — para couriers).
+Campos principais: `name`, `email` (único), `password` (hash bcrypt), `phone`, `address`, `role` (admin / supermarket / estafeta / client), `isActive`, `isEmailVerified`, `accountStatus` (enum: ACTIVE / INACTIVE), `welcomeCouponSent` (boolean), `rating` (average + count - para estafetas).
 
-O método `user.comparePassword(candidate)` encapsula o `bcrypt.compare` — usar sempre este método no login, nunca comparar diretamente com `user.password`.
+O método `user.comparePassword(candidate)` encapsula o `bcrypt.compare` - usar sempre este método no login, nunca comparar diretamente com `user.password`.
 
 ### `Supermarket`
-Associado 1:1 a um `User` com `role: 'supermarket'`. Campos relevantes: `status` (pending / approved / rejected), `rejectionReason`, `isOpen`, `schedule` (7 dias), `deliveryMethods` (array com type, label, cost, active), `rating` (average + count — recalculado automaticamente após cada avaliação).
+Associado 1:1 a um `User` com `role: 'supermarket'`. Campos relevantes: `status` (pending / approved / rejected), `rejectionReason`, `isOpen`, `schedule` (7 dias), `deliveryMethods` (array com type, label, cost, active), `rating` (average + count - recalculado automaticamente após cada avaliação).
 
 ### `Product`
 Campos: `supermarket` (ref), `category` (ref), `name`, `description`, `price`, `stock`, `image`, `isActive`. A imagem é obrigatória, o controller rejeita a criação sem ficheiro. Eliminação por soft delete (`isActive: false`) para preservar o histórico de encomendas.
 
 ### `Order`
 Campos críticos:
-- `client` — snapshot embutido `{userId, name, email, phone}` no momento da compra
-- `items` — array com `{product, productName, productPrice, quantity}` (snapshots — os preços não mudam mesmo que o produto seja editado posteriormente)
+- `client` - snapshot embutido `{userId, name, email, phone}` no momento da compra
+- `items` - array com `{product, productName, productPrice, quantity}` (snapshots - os preços não mudam mesmo que o produto seja editado posteriormente)
 - `subtotal`, `discountAmount`, `couponCode`, `deliveryMethod`, `deliveryCost`, `total`
-- `status` — enum com 7 estados (ver secção de estados)
-- `statusHistory` — log imutável de todas as transições `{status, changedAt, changedBy, reason}`
-- `source` — `'online'` ou `'pos'`
-- `confirmedAt` — usado para a regra dos 5 minutos de cancelamento
-- `reviewSubmitted` — controla se a encomenda já foi avaliada
+- `status` - enum com 7 estados (ver secção de estados)
+- `statusHistory` - log imutável de todas as transições `{status, changedAt, changedBy, reason}`
+- `source` - `'online'` ou `'pos'`
+- `confirmedAt` - usado para a regra dos 5 minutos de cancelamento
+- `reviewSubmitted` - controla se a encomenda já foi avaliada
 
 ### `Delivery`
-Criada automaticamente pelo `order.service.js` quando uma encomenda com `deliveryMethod: 'courier'` passa para o estado `preparing`. Campos: `order` (ref), `courier` (null até ser aceite), `supermarket`, `status` (available / accepted / picked_up / delivered / cancelled), `statusHistory`.
+Criada automaticamente pelo `order.service.js` quando uma encomenda com `deliveryMethod: 'estafeta'` passa para o estado `preparing`. Campos: `order` (ref), `estafeta` (null até ser aceite), `supermarket`, `status` (available / accepted / picked_up / delivered / cancelled), `statusHistory`.
 
 ### `Review`
-Campos: `order` (ref), `author` `{userId, name}`, `targetType` (supermarket / courier), `targetId`, `rating` (1-5), `comment`, `reply` `{text, repliedAt}`, `isVisible`. Índice único em `{order, targetType}` — impede avaliações duplicadas para o mesmo alvo na mesma encomenda.
+Campos: `order` (ref), `author` `{userId, name}`, `targetType` (supermarket / estafeta), `targetId`, `rating` (1-5), `comment`, `reply` `{text, repliedAt}`, `isVisible`. Índice único em `{order, targetType}` - impede avaliações duplicadas para o mesmo alvo na mesma encomenda.
 
 ### `Coupon`
-Campos: `code` (uppercase), `discountType` (percentage / fixed_amount / fixed_shipping), `discountValue`, `minOrderValue`, `maxUses` (null = ilimitado), `currentUses`, `validFrom`, `validUntil`, `isActive`, `supermarket` (null = global), `sentToUsers` (array de ObjectIds — registo de quem já recebeu).
+Campos: `code` (uppercase), `discountType` (percentage / fixed_amount / fixed_shipping), `discountValue`, `minOrderValue`, `maxUses` (null = ilimitado), `currentUses`, `validFrom`, `validUntil`, `isActive`, `supermarket` (null = global), `sentToUsers` (array de ObjectIds - registo de quem já recebeu).
 
 ### `EmailVerification`
-Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `expiresAt` (15 min), `used`. TTL index no campo `expiresAt` — MongoDB apaga automaticamente documentos expirados.
+Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `expiresAt` (15 min), `used`. TTL index no campo `expiresAt` - MongoDB apaga automaticamente documentos expirados.
 
 ---
 
 ## Rotas da Aplicação
 
-### Autenticação — `/auth` (pública)
+### Autenticação - `/auth` (pública)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -230,14 +229,14 @@ Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `e
 | POST | `/auth/resend-verification` | Reenviar código |
 | POST | `/auth/logout` | Destruir sessão e redirecionar para `/catalog` |
 
-### Catálogo — `/catalog` (pública)
+### Catálogo - `/catalog` (pública)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/catalog` | Listar produtos com filtros (nome, categoria, supermercado, ordenação por preço) |
 | GET | `/catalog/compare` | Comparar preços do mesmo produto entre supermercados |
 
-### Cliente — `/client` (requer login + role `client`)
+### Cliente - `/client` (requer login + role `client`)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -253,11 +252,11 @@ Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `e
 | POST | `/client/cart/remove` | Remover item |
 | GET | `/client/checkout` | Formulário de checkout |
 | POST | `/client/checkout` | Finalizar encomenda (com suporte a cupões) |
-| GET | `/client/coupons/validate` | AJAX — validar cupão antes de submeter o checkout |
+| GET | `/client/coupons/validate` | AJAX - validar cupão antes de submeter o checkout |
 | GET | `/client/orders/:id/review` | Formulário de avaliação (requer `status: delivered`, não avaliada) |
-| POST | `/client/orders/:orderId/review` | Submeter avaliação do supermercado e/ou courier |
+| POST | `/client/orders/:orderId/review` | Submeter avaliação do supermercado e/ou estafeta |
 
-### Supermercado — `/supermarket` (requer login + role `supermarket` + aprovação pelo admin)
+### Supermercado - `/supermarket` (requer login + role `supermarket` + aprovação pelo admin)
 
 **Perfil**
 
@@ -299,10 +298,10 @@ Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `e
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/supermarket/pos` | Interface de caixa |
-| GET | `/supermarket/pos/products` | AJAX — pesquisa de produtos (stock > 0, do próprio supermercado) |
-| GET | `/supermarket/pos/clients` | AJAX — pesquisa de clientes existentes (mínimo 2 caracteres) |
-| POST | `/supermarket/pos/clients` | AJAX — criação rápida de novo cliente |
-| GET | `/supermarket/pos/validate-coupon` | AJAX — validar cupão |
+| GET | `/supermarket/pos/products` | AJAX - pesquisa de produtos (stock > 0, do próprio supermercado) |
+| GET | `/supermarket/pos/clients` | AJAX - pesquisa de clientes existentes (mínimo 2 caracteres) |
+| POST | `/supermarket/pos/clients/create-quick`  | criação rápida de novo cliente |
+| GET | `/supermarket/pos/validate-coupon` | AJAX - validar cupão |
 | POST | `/supermarket/pos/checkout` | Finalizar venda presencial |
 
 **Cupões**
@@ -322,20 +321,20 @@ Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `e
 | GET | `/supermarket/reviews` | Ver avaliações recebidas com média |
 | POST | `/supermarket/reviews/:id/reply` | Responder a uma avaliação |
 
-### Estafeta — `/courier` (requer login + role `courier`)
+### Estafeta - `/estafeta` (requer login + role `estafeta`)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| GET | `/courier/dashboard` | Dashboard com entrega ativa, total de entregas e top supermercados |
-| GET | `/courier/available` | Lista de entregas disponíveis para aceitar |
-| POST | `/courier/deliveries/:id/accept` | Aceitar entrega (máximo 1 ativa em simultâneo, aceitação atómica) |
-| POST | `/courier/deliveries/:id/picked-up` | Marcar como levantado no supermercado |
-| POST | `/courier/deliveries/:id/delivered` | Marcar como entregue ao cliente |
-| POST | `/courier/deliveries/:id/cancel` | Cancelar entrega ativa |
-| GET | `/courier/history` | Histórico de todas as entregas |
-| GET | `/courier/reviews` | Avaliações recebidas com média |
+| GET | `/estafeta/dashboard` | Dashboard com entrega ativa, total de entregas e top supermercados |
+| GET | `/estafeta/available` | Lista de entregas disponíveis para aceitar |
+| POST | `/estafeta/deliveries/:id/accept` | Aceitar entrega (máximo 1 ativa em simultâneo, aceitação atómica) |
+| POST | `/estafeta/deliveries/:id/picked-up` | Marcar como levantado no supermercado |
+| POST | `/estafeta/deliveries/:id/delivered` | Marcar como entregue ao cliente |
+| POST | `/estafeta/deliveries/:id/cancel` | Cancelar entrega ativa |
+| GET | `/estafeta/history` | Histórico de todas as entregas |
+| GET | `/estafeta/reviews` | Avaliações recebidas com média |
 
-### Admin — `/admin` (requer login + role `admin`)
+### Admin - `/admin` (requer login + role `admin`)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -371,7 +370,7 @@ Campos: `user` (ref), `email`, `code` (hash bcrypt do código de 6 dígitos), `e
 2. `express-validator` valida os campos
 3. Se o email já existe mas não está verificado, os dados são atualizados e um novo código é enviado (permite corrigir registos falhados)
 4. Gera um código de 6 dígitos, faz hash com `bcrypt` (salt 6) e guarda em `EmailVerification` com expiração de 15 minutos
-5. Envia o código por email via Mailtrap API — **se o envio falhar, o registo é bloqueado**
+5. Envia o código por email via Mailtrap API - **se o envio falhar, o registo é bloqueado**
 6. Redireciona para a página de verificação de email
 
 ### Verificação de email
@@ -381,19 +380,19 @@ O utilizador introduz o código recebido. O sistema compara com `bcrypt.compare`
 ### Login
 
 1. Verifica email + password com `user.comparePassword()`
-2. Verifica `isEmailVerified` — se não, redireciona para verificação
-3. Verifica `isActive` — se não, mensagem de conta desativada
+2. Verifica `isEmailVerified` - se não, redireciona para verificação
+3. Verifica `isActive` - se não, mensagem de conta desativada
 4. Se `role === 'supermarket'`, verifica se não está `rejected`
 5. Cria `req.session.user = { id, name, email, role, supermarketId }`
 6. Suporta parâmetro `?next=/caminho` para redirecionar após login (apenas caminhos internos válidos)
 
 ### Middlewares de proteção
 
-**`isAuthenticated`** — verifica se `req.session.user` existe. Se não, redireciona para `/auth/login` com o caminho original como parâmetro `next` (exceto rotas `/auth/*` para evitar loops).
+**`isAuthenticated`** - verifica se `req.session.user` existe. Se não, redireciona para `/auth/login` com o caminho original como parâmetro `next` (exceto rotas `/auth/*` para evitar loops).
 
-**`hasRole(...roles)`** — verifica se o role do utilizador está na lista. Se não, renderiza `errors/403`.
+**`hasRole(...roles)`** - verifica se o role do utilizador está na lista. Se não, renderiza `errors/403`.
 
-**`isSupermarketApproved`** — aplicado em todas as rotas de supermercado. Se o status for `pending`, renderiza página de espera. Se `rejected`, a conta está bloqueada ao nível do login.
+**`isSupermarketApproved`** - aplicado em todas as rotas de supermercado. Se o status for `pending`, renderiza página de espera. Se `rejected`, a conta está bloqueada ao nível do login.
 
 ---
 
@@ -410,43 +409,43 @@ pending ────────────────────────
 confirmed ─── cliente cancela (≤ 5 min) ──► cancelled
    │
    ▼ supermercado inicia preparação
-preparing ── (se deliveryMethod = courier) → cria Delivery { status: 'available' }
+preparing ── (se deliveryMethod = estafeta) → cria Delivery { status: 'available' }
    │
    ├── pickup / instore ──► ready ──► delivered
    │
-   └── courier aceita ──► in_delivery ──► delivered
+   └── estafeta aceita ──► in_delivery ──► delivered
                                     └────► cancelled (admin)
 ```
 
 ### Regras de negócio
 
 - **Regra dos 5 minutos:** Clientes só podem cancelar encomendas nos primeiros 5 minutos após confirmação. Após esse prazo, o cancelamento é apenas permitido ao admin.
-- **Delivery automática:** Quando uma encomenda com `deliveryMethod: 'courier'` passa para `preparing`, um documento `Delivery` é criado automaticamente com `status: 'available'`.
+- **Delivery automática:** Quando uma encomenda com `deliveryMethod: 'estafeta'` passa para `preparing`, um documento `Delivery` é criado automaticamente com `status: 'available'`.
 - **Cancelamento em cadeia:** Cancelar uma encomenda cancela automaticamente a `Delivery` associada se existir.
-- **Courier que cancela:** A entrega volta a `available` (o mesmo documento é reutilizado), e a encomenda volta a `preparing`.
-- **Aceitação atómica:** Usa `findOneAndUpdate({ _id, status: 'available' })` para evitar que dois couriers aceitem a mesma entrega em simultâneo.
+- **estafeta que cancela:** A entrega volta a `available` (o mesmo documento é reutilizado), e a encomenda volta a `preparing`.
+- **Aceitação atómica:** Usa `findOneAndUpdate({ _id, status: 'available' })` para evitar que dois estafetas aceitem a mesma entrega em simultâneo.
 - **Encomendas POS:** São criadas diretamente com `status: 'delivered'`, com `statusHistory` completo pré-preenchido.
 - **Email em cada transição:** `sendOrderStatusUpdate()` é chamado após cada transição. Se o envio falhar, o erro é registado mas não bloqueia a transição (comportamento best-effort).
 
 ### Serviços de suporte
 
-**`order.service.js`** — máquina de estados central. Todas as transições e a criação de vendas POS passam por aqui.
+**`order.service.js`** - máquina de estados central. Todas as transições e a criação de vendas POS passam por aqui.
 
-**`delivery.service.js`** — funções auxiliares de consulta para o sistema de entregas: entrega ativa do courier, entregas disponíveis, entregas pendentes por supermercado, estatísticas de desempenho do courier e histórico. A lógica de ciclo de vida (aceitar, levantar, entregar, cancelar) está em `order.service.js`.
+**`delivery.service.js`** - funções auxiliares de consulta para o sistema de entregas: entrega ativa do estafeta, entregas disponíveis, entregas pendentes por supermercado, estatísticas de desempenho do estafeta e histórico. A lógica de ciclo de vida (aceitar, levantar, entregar, cancelar) está em `order.service.js`.
 
 ---
 
-## POS — Ponto de Venda
+## POS - Ponto de Venda
 
 O POS permite ao funcionário do supermercado registar vendas presenciais.
 
 ### Funcionamento
 
-1. O funcionário pesquisa produtos por nome ou categoria via AJAX (`/supermarket/pos/products`) — apenas produtos do próprio supermercado com stock > 0
+1. O funcionário pesquisa produtos por nome ou categoria via AJAX (`/supermarket/pos/products`) - apenas produtos do próprio supermercado com stock > 0
 2. Adiciona itens ao carrinho (gerido em JavaScript no frontend)
-3. **Associa o cliente — obrigatório.** O funcionário pode pesquisar um cliente existente por nome, email ou telefone (mínimo 2 caracteres), ou criar um novo cliente inline com nome, email e telefone
+3. **Associa o cliente - obrigatório.** O funcionário pode pesquisar um cliente existente por nome, email ou telefone (mínimo 2 caracteres), ou criar um novo cliente inline com nome, email e telefone
 4. Aplica um cupão de desconto se disponível (validação via AJAX antes de submeter)
-5. Submete o formulário — o servidor valida o cliente, decrementa o stock atomicamente e cria a encomenda
+5. Submete o formulário - o servidor valida o cliente, decrementa o stock atomicamente e cria a encomenda
 
 ---
 
@@ -454,12 +453,12 @@ O POS permite ao funcionário do supermercado registar vendas presenciais.
 
 As avaliações podem ser submetidas pelo **cliente** (no detalhe da sua encomenda) ou registadas pelo **funcionário do supermercado** em nome do cliente (no detalhe da encomenda recebida). Em ambos os casos, a encomenda tem de ter `status: 'delivered'` e `reviewSubmitted: false`.
 
-- Cada encomenda pode gerar no máximo **2 avaliações**: uma para o supermercado e uma para o courier (apenas se a entrega foi feita por courier)
+- Cada encomenda pode gerar no máximo **2 avaliações**: uma para o supermercado e uma para o estafeta (apenas se a entrega foi feita por estafeta)
 - O índice único `{order, targetType}` no modelo `Review` impede avaliações duplicadas
 - Após submissão, `order.reviewSubmitted` é marcado como `true`
 - O rating médio do supermercado é recalculado automaticamente e guardado em `Supermarket.rating`
-- O rating médio do courier é recalculado e guardado em `User.rating`
-- Supermercados e couriers podem responder às suas avaliações
+- O rating médio do estafeta é recalculado e guardado em `User.rating`
+- Supermercados e estafetas podem responder às suas avaliações
 - O admin pode ocultar avaliações inadequadas (`isVisible: false`)
 
 ---
@@ -476,8 +475,8 @@ As avaliações podem ser submetidas pelo **cliente** (no detalhe da sua encomen
 
 ### Âmbito
 
-- **Global** (`supermarket: null`) — válido em qualquer supermercado, criado pelo admin
-- **Específico** — válido apenas num supermercado, criado pelo próprio supermercado
+- **Global** (`supermarket: null`) - válido em qualquer supermercado, criado pelo admin
+- **Específico** - válido apenas num supermercado, criado pelo próprio supermercado
 
 ### Validação (`validateAndApply`)
 
@@ -490,7 +489,7 @@ A função verifica os seguintes critérios, por esta ordem:
 5. `subtotal >= minOrderValue`
 6. Scope correto (global ou do supermercado em questão)
 
-A validação **não incrementa** `currentUses` — essa operação é feita no controller após confirmar que tudo correu bem.
+A validação **não incrementa** `currentUses` - essa operação é feita no controller após confirmar que tudo correu bem.
 
 ### Cupão de boas-vindas
 
@@ -505,35 +504,29 @@ O admin pode enviar qualquer cupão global a todos os utilizadores com email ver
 ## Gestão de Produtos
 
 - Cada produto pertence a um supermercado e tem: nome, descrição, categoria, preço, stock, imagem
-- **Imagem obrigatória** — o controller rejeita a criação sem ficheiro (sem fallback para placeholder)
+- **Imagem obrigatória** - o controller rejeita a criação sem ficheiro (sem fallback para placeholder)
 - Os uploads são tratados pelo `multer` e guardados em `public/uploads/products/`
 - Produtos são eliminados por **soft delete** (`isActive: false`) para não quebrar o histórico de encomendas
-- O stock é decrementado de forma **atómica** no checkout: `findOneAndUpdate({ stock: { $gte: qty } }, { $inc: { stock: -qty } })` — se retornar `null`, o stock esgotou entre o carrinho e o pagamento, e os stocks já decrementados são revertidos manualmente
+- O stock é decrementado de forma **atómica** no checkout: `findOneAndUpdate({ stock: { $gte: qty } }, { $inc: { stock: -qty } })` - se retornar `null`, o stock esgotou entre o carrinho e o pagamento, e os stocks já decrementados são revertidos manualmente
 
 ---
 
 ## Estado Atual do Projeto
 
-### ✅ Implementado
+### Implementado
 
 - Autenticação completa com verificação de email via Mailtrap API
 - Sistema de sessões seguro com rate limiting no login
 - Área do admin: aprovação de supermercados, gestão de utilizadores, categorias, encomendas, cupões globais e ocultação de reviews
 - Área do supermercado: perfil, CRUD de produtos com imagem obrigatória, gestão de encomendas com máquina de estados, POS com cliente obrigatório, cupões próprios, reviews
-- Área do courier: entregas disponíveis, aceitação atómica, fluxo completo de entrega, cancelamento com devolução ao pool, histórico, reviews
+- Área do estafeta: entregas disponíveis, aceitação atómica, fluxo completo de entrega, cancelamento com devolução ao pool, histórico, reviews
 - Catálogo público com pesquisa, filtros e comparação de preços
-- Área do cliente: carrinho em sessão, checkout com cupões, histórico de encomendas, cancelamento com regra dos 5 minutos, avaliação de supermercado e courier
-- Notificações por email em cada transição de estado de encomenda (best-effort — falha não bloqueia a transição)
+- Área do cliente: carrinho em sessão, checkout com cupões, histórico de encomendas, cancelamento com regra dos 5 minutos, avaliação de supermercado e estafeta
+- Notificações por email em cada transição de estado de encomenda (best-effort - falha não bloqueia a transição)
 - Cupão de boas-vindas `BEMVINDO10` enviado automaticamente após verificação de email
 - Envio manual de cupões globais a todos os utilizadores verificados pelo admin
-- Sistema de avaliações de supermercados e couriers com resposta
+- Sistema de avaliações de supermercados e estafetas com resposta
 - Proteção de recursos por ownership (cada supermercado só acede aos seus próprios dados)
-
-### ⏳ Pendente (Milestone 2)
-
-- Frontend Angular para clientes finais
-- API REST documentada com Swagger
-- Autenticação via JWT para o frontoffice Angular
 
 ---
 
@@ -541,10 +534,10 @@ O admin pode enviar qualquer cupão global a todos os utilizadores com email ver
 
 | Decisão | Motivo |
 |---------|--------|
-| Snapshots de preço/nome em `Order.items` | Preservar histórico — o preço pode mudar após a compra |
+| Snapshots de preço/nome em `Order.items` | Preservar histórico - o preço pode mudar após a compra |
 | Decremento atómico de stock com rollback manual | Garantir integridade sem necessitar de MongoDB Transactions (exige ReplicaSet) |
 | Soft delete em produtos e categorias | Manter integridade do histórico de encomendas |
-| Sessões server-side | Segurança — token não exposto no cliente |
+| Sessões server-side | Segurança - token não exposto no cliente |
 | `accountStatus` em User | Distinguir contas totalmente ativas de contas criadas no POS ainda não ativadas |
 | Cliente obrigatório no POS | Rastreabilidade total de vendas presenciais |
 | Email best-effort nas transições de estado | Uma falha de email não deve impedir a operação de negócio |
@@ -553,7 +546,7 @@ O admin pode enviar qualquer cupão global a todos os utilizadores com email ver
 
 ## Credenciais de Teste e Script de Seed
 
-### 🛠️ O Script `seed.js`
+### O Script `seed.js`
 O script de seed foi desenhado para criar um ambiente de teste completo e realista. Ele executa as seguintes operações:
 1.  **Limpeza Total:** Remove todos os dados existentes para evitar conflitos de IDs.
 2.  **Criação de Roles:** Instancia utilizadores com diferentes permissões (Admin, Owners, Clients).
