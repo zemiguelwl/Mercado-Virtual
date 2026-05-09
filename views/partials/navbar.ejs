@@ -1,0 +1,48 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="/">Mercadinho Virtual</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#backofficeNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="backofficeNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <% if (user?.role === "admin") { %>
+          <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/supermarkets">Supermercados</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/users">Utilizadores</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/orders">Encomendas</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/categories">Categorias</a></li>
+          <li class="nav-item"><a class="nav-link" href="/admin/coupons">Cupoes</a></li>
+        <% } %>
+        <% if (user?.role === "supermarket") { %>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/dashboard">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/profile">Perfil</a></li>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/products">Produtos</a></li>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/orders">Encomendas</a></li>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/coupons">Cupões</a></li>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/reviews">Avaliações</a></li>
+          <li class="nav-item"><a class="nav-link" href="/supermarket/pos">POS</a></li>
+        <% } %>
+        <% if (user?.role === "courier") { %>
+          <li class="nav-item"><a class="nav-link" href="/courier/dashboard">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/courier/available">Disponiveis</a></li>
+          <li class="nav-item"><a class="nav-link" href="/courier/history">Historico</a></li>
+          <li class="nav-item"><a class="nav-link" href="/courier/reviews">Avaliacoes</a></li>
+        <% } %>
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        <% if (user) { %>
+          <li class="nav-item me-2"><span class="navbar-text"><%= user.name %></span></li>
+          <li class="nav-item">
+            <form method="post" action="/auth/logout" class="d-inline">
+              <button type="submit" class="btn btn-outline-light btn-sm">Sair</button>
+            </form>
+          </li>
+        <% } else { %>
+          <li class="nav-item"><a class="nav-link" href="/auth/login">Entrar</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</nav>

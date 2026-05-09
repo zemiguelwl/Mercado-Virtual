@@ -1,0 +1,52 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Criar cupão</h1>
+    <p class="bo-page-subtitle">Definir regras de desconto para clientes.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="/supermarket/coupons" class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="code">Código</label>
+        <input id="code" name="code" class="form-control" required>
+      </div>
+      <div class="col-12 col-md-8">
+        <label class="form-label" for="description">Descrição</label>
+        <input id="description" name="description" class="form-control">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="discountType">Tipo</label>
+        <select id="discountType" name="discountType" class="form-select">
+          <option value="percentage">Percentagem no subtotal</option>
+          <option value="fixed_amount">Valor fixo</option>
+          <option value="fixed_shipping">Entrega gratuita</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="discountValue">Desconto</label>
+        <input id="discountValue" name="discountValue" type="number" step="0.01" class="form-control" required>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="minOrderValue">Valor mínimo</label>
+        <input id="minOrderValue" name="minOrderValue" type="number" step="0.01" class="form-control" value="0">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="maxUses">Máximo de usos</label>
+        <input id="maxUses" name="maxUses" type="number" class="form-control" placeholder="Opcional">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="validFrom">Válido de</label>
+        <input id="validFrom" name="validFrom" type="date" class="form-control" required>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="validUntil">Válido até</label>
+        <input id="validUntil" name="validUntil" type="date" class="form-control" required>
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">Criar cupão</button>
+      </div>
+    </form>
+  </div>
+</div>

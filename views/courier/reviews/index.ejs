@@ -1,0 +1,30 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Avaliações do estafeta</h1>
+    <p class="bo-page-subtitle">Resumo de feedback recebido nas entregas.</p>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <p class="mb-0">Rating médio: <strong><%= locals.averageRating || 0 %>/5</strong></p>
+  </div>
+</div>
+
+<div class="vstack gap-3">
+  <% if (locals.reviews && locals.reviews.length) { %>
+    <% locals.reviews.forEach((r) => { %>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge text-bg-warning text-dark"><%= r.rating %>/5</span>
+            <span class="small text-muted"><%= r.createdAt ? new Date(r.createdAt).toLocaleString("pt-PT") : "" %></span>
+          </div>
+          <p class="mb-0"><%= r.comment || "Sem comentário." %></p>
+        </div>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <div class="bo-empty-state">Ainda não existem avaliações.</div>
+  <% } %>
+</div>

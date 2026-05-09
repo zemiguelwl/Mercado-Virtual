@@ -1,0 +1,72 @@
+<div class="bo-page-header mb-4">
+  <div>
+    <h1 class="h3 mb-1">Dashboard Supermercado</h1>
+    <p class="bo-page-subtitle">Resumo operacional da tua loja.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card bo-stat-card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Encomendas pendentes</p>
+        <p class="display-6 mb-0"><%= locals.pendingOrders || 0 %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card bo-stat-card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Total de encomendas</p>
+        <p class="display-6 mb-0"><%= locals.totalOrders || 0 %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-xl-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Produtos com stock baixo</h2>
+      </div>
+      <div class="card-body">
+        <% if (locals.lowStockProducts && locals.lowStockProducts.length) { %>
+          <ul class="list-group list-group-flush">
+            <% locals.lowStockProducts.forEach((p) => { %>
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span><%= p.name %></span>
+                <span class="badge text-bg-warning">Stock: <%= p.stock %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted mb-0">Não existem alertas de stock.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Top produtos vendidos</h2>
+      </div>
+      <div class="card-body">
+        <% if (locals.topProducts && locals.topProducts.length) { %>
+          <ul class="list-group list-group-flush">
+            <% locals.topProducts.forEach((row, idx) => { %>
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span><%= idx + 1 %>. <%= row._id %></span>
+                <span class="badge bo-soft-badge"><%= row.totalSold %> un.</span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted mb-0">Ainda sem vendas entregues para estatística.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+

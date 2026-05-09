@@ -1,0 +1,70 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Encomendas</h1>
+    <p class="bo-page-subtitle">Monitorização e intervenção no ciclo de encomendas.</p>
+  </div>
+</div>
+
+<form method="GET" action="/admin/orders" class="row g-2 mb-3">
+  <div class="col-12 col-md-4">
+    <label for="status" class="form-label">Filtrar por estado</label>
+    <select id="status" name="status" class="form-select">
+      <% const currentStatus = (locals.filters && locals.filters.status) || ""; %>
+      <option value="" <%= !currentStatus ? "selected" : "" %>>Todos</option>
+      <option value="pending" <%= currentStatus === "pending" ? "selected" : "" %>>Pendente</option>
+      <option value="confirmed" <%= currentStatus === "confirmed" ? "selected" : "" %>>Confirmada</option>
+      <option value="preparing" <%= currentStatus === "preparing" ? "selected" : "" %>>Em preparação</option>
+      <option value="ready" <%= currentStatus === "ready" ? "selected" : "" %>>Pronta</option>
+      <option value="in_delivery" <%= currentStatus === "in_delivery" ? "selected" : "" %>>Em entrega</option>
+      <option value="delivered" <%= currentStatus === "delivered" ? "selected" : "" %>>Entregue</option>
+      <option value="cancelled" <%= currentStatus === "cancelled" ? "selected" : "" %>>Cancelada</option>
+    </select>
+  </div>
+  <div class="col-12 col-md-auto d-flex align-items-end">
+    <button class="btn btn-primary">Aplicar filtro</button>
+  </div>
+</form>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.orders && locals.orders.length) { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Referência</th>
+              <th>Supermercado</th>
+              <th>Cliente</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.orders.forEach((o) => { %>
+              <tr>
+                <td>#<%= String(o._id).slice(-6).toUpperCase() %></td>
+                <td><%= o.supermarket && o.supermarket.name ? o.supermarket.name : "N/A" %></td>
+                <td><%= o.client && o.client.name ? o.client.name : "N/A" %></td>
+                <td><span class="badge text-bg-light border"><%= o.status %></span></td>
+                <td>€<%= Number(o.total || 0).toFixed(2) %></td>
+                <td class="text-end">
+                  <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <a href="/admin/orders/<%= o._id %>" class="btn btn-sm btn-outline-primary">Detalhe</a>
+                    <% if (o.status !== "cancelled" && o.status !== "delivered") { %>
+                      <form method="POST" action="/admin/orders/<%= o._id %>/cancel">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Forçar cancelamento</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Sem encomendas para mostrar.</p>
+    <% } %>
+  </div>
+</div>

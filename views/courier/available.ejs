@@ -1,0 +1,44 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Entregas disponíveis</h1>
+    <p class="bo-page-subtitle">Lista de entregas prontas para aceitação.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.deliveries && locals.deliveries.length) { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Entrega</th>
+              <th>Supermercado</th>
+              <th>Pedido</th>
+              <th class="text-end">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.deliveries.forEach((d) => { %>
+              <tr>
+                <td>#<%= String(d._id).slice(-6).toUpperCase() %></td>
+                <td>
+                  <div><%= (d.supermarket && d.supermarket.name) || "N/A" %></div>
+                  <div class="small text-muted"><%= (d.supermarket && d.supermarket.location) || "Sem localização" %></div>
+                </td>
+                <td>#<%= d.order ? String(d.order._id).slice(-6).toUpperCase() : "N/A" %></td>
+                <td class="text-end">
+                  <form method="POST" action="/courier/deliveries/<%= d._id %>/accept">
+                    <button class="btn btn-sm btn-primary" type="submit">Aceitar</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Não existem entregas disponíveis neste momento.</p>
+    <% } %>
+  </div>
+</div>

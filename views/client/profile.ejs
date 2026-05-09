@@ -1,0 +1,19 @@
+<div class="container pb-5" style="max-width:680px">
+  <div class="bo-page-header">
+    <div>
+      <h1 class="h3 mb-1">Perfil</h1>
+      <p class="bo-page-subtitle">Atualiza os teus dados de contacto.</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <form method="post" action="/client/profile">
+        <div class="mb-2"><label class="form-label">Nome</label><input class="form-control" name="name" value="<%= user.name %>" required></div>
+        <div class="mb-2"><label class="form-label">Email</label><input class="form-control" value="<%= user.email %>" disabled></div>
+        <div class="mb-2"><label class="form-label">Telefone</label><input class="form-control" name="phone" value="<%= user.phone %>"></div>
+        <div class="mb-3"><label class="form-label">Morada</label><textarea class="form-control" name="address" rows="2"><%= user.address %></textarea></div>
+        <button class="btn btn-primary" type="submit">Guardar</button>
+      </form>
+    </div>
+  </div>
+</div>

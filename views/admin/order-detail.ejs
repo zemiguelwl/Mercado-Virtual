@@ -1,0 +1,97 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Detalhe da encomenda</h1>
+    <p class="bo-page-subtitle">Consulta completa e ações administrativas.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-8">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Informação geral</h2>
+      </div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Referência:</strong> #<%= String(locals.order._id).slice(-6).toUpperCase() %></p>
+        <p class="mb-1"><strong>Supermercado:</strong> <%= (locals.order.supermarket && locals.order.supermarket.name) || "N/A" %></p>
+        <p class="mb-1"><strong>Cliente:</strong> <%= (locals.order.client && locals.order.client.name) || "N/A" %></p>
+        <p class="mb-1"><strong>Email cliente:</strong> <%= (locals.order.client && locals.order.client.email) || "Sem email" %></p>
+        <p class="mb-1"><strong>Estado:</strong> <span class="badge text-bg-light border"><%= locals.order.status %></span></p>
+        <p class="mb-0"><strong>Total:</strong> €<%= Number(locals.order.total || 0).toFixed(2) %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Ações admin</h2>
+      </div>
+      <div class="card-body">
+        <% if (locals.order.status !== "cancelled" && locals.order.status !== "delivered") { %>
+          <form method="POST" action="/admin/orders/<%= locals.order._id %>/cancel">
+            <label for="reason" class="form-label">Motivo do cancelamento</label>
+            <textarea id="reason" name="reason" class="form-control mb-3" rows="3" placeholder="Cancelado pelo admin"></textarea>
+            <button class="btn btn-danger w-100" type="submit">Forçar cancelamento</button>
+          </form>
+        <% } else { %>
+          <p class="text-muted mb-0">Esta encomenda já não pode ser cancelada.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-white">
+    <h2 class="h5 mb-0">Itens da encomenda</h2>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Preço unit.</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (locals.order.items || []).forEach((i) => { %>
+            <tr>
+              <td><%= i.productName %></td>
+              <td><%= i.quantity %></td>
+              <td>€<%= Number(i.productPrice || 0).toFixed(2) %></td>
+              <td>€<%= Number((i.productPrice || 0) * (i.quantity || 0)).toFixed(2) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white">
+    <h2 class="h5 mb-0">Histórico de estados</h2>
+  </div>
+  <div class="card-body">
+    <% if (locals.order.statusHistory && locals.order.statusHistory.length) { %>
+      <ul class="list-group list-group-flush">
+        <% locals.order.statusHistory.forEach((h) => { %>
+          <li class="list-group-item px-0">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+              <span class="fw-semibold"><%= h.status %></span>
+              <span class="text-muted"><%= new Date(h.changedAt).toLocaleString("pt-PT") %></span>
+            </div>
+            <% if (h.reason) { %>
+              <div class="small text-muted mt-1"><%= h.reason %></div>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="text-muted mb-0">Sem histórico disponível.</p>
+    <% } %>
+  </div>
+</div>

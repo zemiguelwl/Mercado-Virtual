@@ -1,0 +1,47 @@
+<div class="container pb-5" style="max-width:740px">
+  <div class="bo-page-header">
+    <div>
+      <h1 class="h3 mb-1">Finalizar encomenda</h1>
+      <p class="bo-page-subtitle"><strong><%= supermarket.name %></strong></p>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="/client/cart">Voltar ao carrinho</a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <ul class="mb-3">
+        <% lines.forEach(l => { %>
+          <li><%= l.product.name %> × <%= l.quantity %> por €<%= (l.product.price * l.quantity).toFixed(2) %></li>
+        <% }) %>
+      </ul>
+      <p class="mb-0">Subtotal: <strong>€<%= subtotal.toFixed(2) %></strong></p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label" for="couponCode">Cupão de desconto (opcional)</label>
+      <input class="form-control" type="text" id="couponCode" name="couponCode" placeholder="Insere o código do cupão">
+      <div class="form-text">Se tiveres um cupão válido, insere o código aqui para aplicar o desconto.</div>
+    </div>
+  </div>
+
+  <% if (!deliveryOptions.length) { %>
+    <div class="alert alert-warning">Este supermercado não tem métodos de entrega configurados para compra online. Contacta o suporte.</div>
+  <% } else { %>
+    <div class="card">
+      <div class="card-body">
+        <form method="post" action="/client/checkout">
+          <label class="form-label">Método de entrega</label>
+          <% deliveryOptions.forEach((m, idx) => { %>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="deliveryMethod" value="<%= m.type %>" id="dm_<%= m.type %>" <%= idx === 0 ? 'checked' : '' %> required>
+              <label class="form-check-label" for="dm_<%= m.type %>"><%= m.label || m.type %> (€<%= Number(m.cost).toFixed(2) %>)</label>
+            </div>
+          <% }) %>
+          <button class="btn btn-success mt-3" type="submit">Confirmar encomenda</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+</div>

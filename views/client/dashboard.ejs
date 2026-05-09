@@ -1,0 +1,40 @@
+<div class="container pb-5">
+  <div class="bo-page-header">
+    <div>
+      <h1 class="h3 mb-1">Olá, <%= user.name %></h1>
+      <p class="bo-page-subtitle">Resumo da tua atividade na plataforma.</p>
+    </div>
+    <a class="btn btn-outline-primary btn-sm" href="/catalog">Continuar a comprar</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card bo-stat-card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-muted mb-1">Encomendas</h2>
+          <p class="display-6 mb-3"><%= orderCount %></p>
+          <a class="btn btn-primary btn-sm" href="/client/orders">Ver histórico</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Produtos mais comprados (entregues)</h2>
+          <% if (topProducts.length) { %>
+            <ul class="list-group list-group-flush mb-0">
+              <% topProducts.forEach(t => { %>
+                <li class="list-group-item px-0 d-flex justify-content-between">
+                  <span><%= t._id %></span>
+                  <span class="badge bo-soft-badge"><%= t.totalQty %> un.</span>
+                </li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="bo-empty-state">Ainda sem dados.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

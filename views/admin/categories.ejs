@@ -1,0 +1,78 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Categorias</h1>
+    <p class="bo-page-subtitle">Criação e manutenção do catálogo de categorias.</p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-white">
+    <h2 class="h5 mb-0">Criar categoria</h2>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="/admin/categories" class="row g-3">
+      <div class="col-12 col-md-4">
+        <label for="newCategoryName" class="form-label">Nome</label>
+        <input id="newCategoryName" class="form-control" name="name" required>
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="newCategoryDescription" class="form-label">Descrição</label>
+        <input id="newCategoryDescription" class="form-control" name="description">
+      </div>
+      <div class="col-12 col-md-2 d-grid d-md-flex align-items-end">
+        <button class="btn btn-primary w-100" type="submit">Criar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.categories && locals.categories.length) { %>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Estado</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.categories.forEach((c) => { %>
+              <tr>
+                <td>
+                  <form method="POST" action="/admin/categories/<%= c._id %>?_method=PUT" class="row g-2">
+                    <div class="col-12 col-md-4">
+                      <input class="form-control form-control-sm" name="name" value="<%= c.name %>" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <input class="form-control form-control-sm" name="description" value="<%= c.description || '' %>">
+                    </div>
+                    <div class="col-12 col-md-2 d-grid">
+                      <button class="btn btn-sm btn-outline-primary" type="submit">Guardar</button>
+                    </div>
+                  </form>
+                </td>
+                <td>
+                  <span class="badge text-bg-<%= c.isActive ? 'success' : 'secondary' %>">
+                    <%= c.isActive ? "Ativa" : "Inativa" %>
+                  </span>
+                </td>
+                <td class="text-end">
+                  <% if (c.isActive) { %>
+                    <form method="POST" action="/admin/categories/<%= c._id %>?_method=DELETE">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Desativar</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Sem categorias para mostrar.</p>
+    <% } %>
+  </div>
+</div>

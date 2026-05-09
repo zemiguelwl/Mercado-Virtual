@@ -1,0 +1,79 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Supermercados</h1>
+    <p class="bo-page-subtitle">Gestão de estados e aprovação de lojas.</p>
+  </div>
+</div>
+
+<form method="GET" action="/admin/supermarkets" class="row g-2 mb-3">
+  <div class="col-12 col-md-4">
+    <label for="status" class="form-label">Filtrar por estado</label>
+    <select id="status" name="status" class="form-select">
+      <option value="" <%= !locals.currentStatus ? "selected" : "" %>>Todos</option>
+      <option value="pending" <%= locals.currentStatus === "pending" ? "selected" : "" %>>Pendente</option>
+      <option value="approved" <%= locals.currentStatus === "approved" ? "selected" : "" %>>Aprovado</option>
+      <option value="rejected" <%= locals.currentStatus === "rejected" ? "selected" : "" %>>Rejeitado</option>
+    </select>
+  </div>
+  <div class="col-12 col-md-auto d-flex align-items-end">
+    <button class="btn btn-primary">Aplicar filtro</button>
+  </div>
+</form>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.supermarkets && locals.supermarkets.length) { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Supermercado</th>
+              <th>Contacto</th>
+              <th>Estado</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.supermarkets.forEach((sm) => { %>
+              <tr>
+                <td>
+                  <div class="fw-semibold"><%= sm.name %></div>
+                  <div class="small text-muted"><%= sm.location || "Sem localização" %></div>
+                </td>
+                <td>
+                  <div><%= sm.user && sm.user.email ? sm.user.email : "Sem email" %></div>
+                  <div class="small text-muted"><%= sm.phone || (sm.user && sm.user.phone) || "Sem telefone" %></div>
+                </td>
+                <td>
+                  <span class="badge text-bg-<%= sm.status === 'approved' ? 'success' : sm.status === 'pending' ? 'warning' : 'danger' %>">
+                    <%= sm.status %>
+                  </span>
+                  <% if (sm.status === "rejected" && sm.rejectionReason) { %>
+                    <div class="small text-muted mt-1"><%= sm.rejectionReason %></div>
+                  <% } %>
+                </td>
+                <td class="text-end">
+                  <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <% if (sm.status !== "approved") { %>
+                      <form method="POST" action="/admin/supermarkets/<%= sm._id %>/approve">
+                        <button class="btn btn-sm btn-success" type="submit">Aprovar</button>
+                      </form>
+                    <% } %>
+                    <% if (sm.status !== "rejected") { %>
+                      <form method="POST" action="/admin/supermarkets/<%= sm._id %>/reject" class="d-flex gap-2">
+                        <input class="form-control form-control-sm" name="reason" placeholder="Motivo">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Rejeitar</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Sem supermercados para mostrar.</p>
+    <% } %>
+  </div>
+</div>

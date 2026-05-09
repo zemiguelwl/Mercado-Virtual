@@ -1,0 +1,120 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">POS / Caixa</h1>
+    <p class="bo-page-subtitle">Registo de vendas presenciais e checkout rápido.</p>
+  </div>
+</div>
+
+<form method="post" action="/supermarket/pos/checkout" id="posCheckoutForm">
+  <input type="hidden" name="itemsJson" id="itemsJson">
+  <input type="hidden" name="clientId" id="clientIdHidden">
+  <input type="hidden" name="couponCode" id="couponCodeHidden">
+
+  <div class="row g-3 align-items-start">
+    <!-- PRODUTOS -->
+    <section class="col-12 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+      <h2 class="h5">Produtos</h2>
+      <input id="productSearch" class="form-control mb-2" placeholder="Pesquisar produto...">
+      <select id="productCategory" class="form-select mb-2">
+        <option value="">Todas categorias</option>
+        <% (locals.categories || []).forEach(c => { %>
+          <option value="<%= c._id %>"><%= c.name %></option>
+        <% }) %>
+      </select>
+      <div id="productsList" class="pos-products-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARRINHO -->
+    <section class="col-12 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+      <h2 class="h5">Carrinho</h2>
+      <div id="cartItems" style="max-height: 400px; overflow-y: auto; margin-bottom: 10px;"></div>
+      
+      <hr>
+      <p>Subtotal: €<span id="subtotalValue">0.00</span></p>
+      <p>Desconto: €<span id="discountValue">0.00</span></p>
+      <p class="fw-semibold">Total: €<span id="totalValue">0.00</span></p>
+
+      <div class="mt-2">
+        <input id="couponCodeInput" class="form-control" placeholder="Código cupão">
+        <button type="button" id="applyCouponBtn" class="btn btn-outline-primary mt-2 w-100">Aplicar</button>
+        <small id="couponMessage" class="d-block mt-1"></small>
+      </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLIENTE E CHECKOUT -->
+    <section class="col-12 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+      <h2 class="h5">Cliente e checkout</h2>
+
+      <!-- PESQUISA DE CLIENTE -->
+      <div class="mb-3">
+        <input id="clientSearch" class="form-control form-control-sm mb-2" placeholder="Pesquisar cliente (nome/email/tel)...">
+        <button type="button" id="searchClientBtn" class="btn btn-sm btn-outline-secondary w-100 mb-2">Pesquisar</button>
+        <div id="clientSearchResult" class="mb-2" style="font-size:0.9em"></div>
+      </div>
+
+      <!-- CLIENTE SELECIONADO -->
+
+      <div class="bg-light p-3 rounded mb-3" id="selectedClientInfo" style="display:none">
+        <h6>Cliente Selecionado:</h6>
+        <p class="mb-1"><strong id="clientName"></strong></p>
+        <p class="mb-1"><small id="clientEmail"></small></p>
+        <p class="mb-0"><small id="clientPhone"></small></p>
+      </div>
+
+      <!-- CRIAR CLIENTE RÁPIDO -->
+      <button type="button" id="createClientQuickBtn" class="btn btn-sm btn-secondary w-100 mb-2">+ Criar Cliente Rápido</button>
+      
+      <div id="createClientForm" style="display:none;border:1px solid #ddd;padding:10px;border-radius:5px;margin-bottom:10px">
+        <h6>Dados Cliente</h6>
+        <input id="newClientName" class="form-control form-control-sm mb-2" placeholder="Nome">
+        <input id="newClientEmail" class="form-control form-control-sm mb-2" placeholder="Email" type="email">
+        <input id="newClientPhone" class="form-control form-control-sm mb-2" placeholder="Telefone">
+        <button type="button" id="submitCreateClientBtn" class="btn btn-sm btn-success w-100">Criar</button>
+      </div>
+
+      <button class="btn btn-primary w-100 mt-3" id="checkoutBtn" disabled>Finalizar venda</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</form>
+
+<style>
+  .pos-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .pos-products-grid > div {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .pos-products-grid > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .pos-products-grid img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+  }
+  .pos-products-grid button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
+
+<script src="/js/pos.js"></script>

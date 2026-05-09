@@ -1,0 +1,36 @@
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="h3 mb-2 text-center">Verificar email</h1>
+        <p class="text-muted text-center mb-4">
+          Enviámos um código de 6 dígitos para
+          <strong><%= locals.email || "o teu email" %></strong>.
+        </p>
+
+        <form method="POST" action="/auth/verify-email">
+          <div class="mb-3">
+            <label for="code" class="form-label">Código</label>
+            <input
+              id="code"
+              class="form-control text-center fs-5"
+              name="code"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              maxlength="6"
+              placeholder="000000"
+              required
+            >
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Verificar</button>
+        </form>
+
+        <form class="mt-3" method="POST" action="/auth/resend-verification">
+          <button type="submit" class="btn btn-outline-secondary w-100">Reenviar código</button>
+        </form>
+
+        <p class="small text-muted mt-3 mb-0 text-center">O código expira ao fim de 15 minutos.</p>
+      </div>
+    </div>
+  </div>
+</div>

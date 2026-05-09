@@ -1,0 +1,72 @@
+<div class="container pb-5">
+  <div class="bo-page-header">
+    <div>
+      <h1 class="h3 mb-1">Encomenda #<%= order._id.toString().slice(-6).toUpperCase() %></h1>
+      <p class="bo-page-subtitle">Acompanha o estado e os detalhes da tua compra.</p>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="/client/orders">Voltar às encomendas</a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <p class="mb-1"><strong>Estado:</strong> <span class="badge bo-soft-badge"><%= order.status %></span></p>
+      <p class="mb-1"><strong>Supermercado:</strong> <%= order.supermarket?.name %></p>
+      <p class="mb-0"><strong>Total:</strong> €<%= Number(order.total).toFixed(2) %>; <strong>Entrega:</strong> <%= order.deliveryMethod %> (€<%= Number(order.deliveryCost).toFixed(2) %>)</p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header bg-white">
+      <h2 class="h6 mb-0">Itens</h2>
+    </div>
+    <div class="card-body">
+      <ul class="mb-0">
+        <% order.items.forEach(i => { %>
+          <li><%= i.productName %> × <%= i.quantity %> @ €<%= Number(i.productPrice).toFixed(2) %></li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+
+  <% if (delivery) { %>
+    <div class="card mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Informações de Entrega</h5>
+      </div>
+      <div class="card-body">
+        <p><strong>Estado:</strong> <span class="badge bo-soft-badge"><%= delivery.status %></span></p>
+        <% if (delivery.courier) { %>
+          <p><strong>Estafeta:</strong> <%= delivery.courier.name %><% if (delivery.courier.phone) { %> (Tel: <%= delivery.courier.phone %>)<% } %></p>
+          <% if (delivery.acceptedAt) { %>
+            <p><small class="text-muted">Aceite em: <%= new Date(delivery.acceptedAt).toLocaleString('pt-PT') %></small></p>
+          <% } %>
+        <% } else { %>
+          <p><small class="text-muted">À espera de atribuição de estafeta...</small></p>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (order.status === 'delivered' && !order.reviewSubmitted) { %>
+    <div class="alert alert-info">
+      <p>Ajuda-nos a melhorar! <a href="/client/orders/<%= order._id %>/review">Deixa a tua avaliação →</a></p>
+    </div>
+  <% } %>
+
+  <% if (order.status === 'pending') { %>
+    <form method="post" action="/client/orders/<%= order._id %>/cancel" class="js-confirm-cancel-order">
+      <div class="card card-body border-danger-subtle bg-light-subtle">
+        <label class="form-label small fw-bold text-danger">Atenção</label>
+        <input class="form-control form-control-sm mb-2" name="reason" placeholder="Motivo do cancelamento (opcional)">
+        <button class="btn btn-outline-danger btn-sm w-100" type="submit">Cancelar encomenda</button>
+      </div>
+    </form>
+  <% } else if (order.status !== 'cancelled' && order.status !== 'delivered') { %>
+    <div class="alert alert-light border small d-flex align-items-center">
+      <i class="bi bi-info-circle me-2"></i>
+      <span>A encomenda já foi aceite pelo supermercado e não pode ser cancelada.</span>
+    </div>
+  <% } %>
+
+</div>
+<script src="/javascripts/client-order-detail.js"></script>

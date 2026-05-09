@@ -1,0 +1,58 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Produtos</h1>
+    <p class="bo-page-subtitle">Gestão de catálogo, stock e preços.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/supermarket/products/create" class="btn btn-primary btn-sm">Novo produto</a>
+  </div>
+</div>
+
+<form method="GET" action="/supermarket/products" class="row g-2 mb-3">
+  <div class="col-12 col-md-4">
+    <input class="form-control" name="search" value="<%= locals.search || '' %>" placeholder="Pesquisar por nome">
+  </div>
+  <div class="col-12 col-md-4">
+    <select name="category" class="form-select">
+      <option value="">Todas as categorias</option>
+      <% (locals.categories || []).forEach((c) => { %>
+        <option value="<%= c._id %>" <%= String(locals.currentCategory || "") === String(c._id) ? "selected" : "" %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-12 col-md-auto">
+    <button class="btn btn-primary">Filtrar</button>
+  </div>
+</form>
+
+<div class="row g-3">
+  <% if (locals.products && locals.products.length) { %>
+    <% locals.products.forEach((p) => { %>
+      <div class="col-12 col-sm-6 col-xl-4">
+        <article class="card h-100">
+          <img src="<%= p.image || '/images/product-placeholder.svg' %>" class="card-img-top" alt="Imagem de <%= p.name %>" style="height:200px;object-fit:cover;">
+          <div class="card-body d-flex flex-column">
+            <h2 class="h6 mb-1"><%= p.name %></h2>
+            <p class="small text-muted mb-2"><%= (p.category && p.category.name) || "Sem categoria" %></p>
+            <p class="mb-1 fw-semibold">€<%= Number(p.price || 0).toFixed(2) %></p>
+            <p class="text-muted mb-3">Stock: <%= p.stock %></p>
+            <div class="mt-auto d-flex flex-wrap gap-2">
+              <a class="btn btn-sm btn-outline-primary" href="/supermarket/products/<%= p._id %>/edit">Editar</a>
+              <form method="POST" action="/supermarket/products/<%= p._id %>?_method=DELETE">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Desativar</button>
+              </form>
+              <form method="POST" action="/supermarket/products/<%= p._id %>/stock" class="d-flex gap-1">
+                <input type="number" name="amount" value="1" class="form-control form-control-sm" style="max-width:90px">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">Ajustar</button>
+              </form>
+            </div>
+          </div>
+        </article>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <div class="col-12">
+      <div class="bo-empty-state">Sem produtos para mostrar.</div>
+    </div>
+  <% } %>
+</div>

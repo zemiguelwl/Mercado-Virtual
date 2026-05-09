@@ -1,0 +1,33 @@
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="h3 mb-2 text-center">Entrar</h1>
+        <p class="text-muted text-center mb-4">Acede ao teu painel no Mercadinho Virtual.</p>
+
+        <form method="POST" action="/auth/login" novalidate>
+          <% if (locals.next) { %>
+            <input type="hidden" name="next" value="<%= locals.next %>">
+          <% } %>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input id="email" class="form-control" name="email" type="email" autocomplete="email" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="password" class="form-label">Password</label>
+            <input id="password" class="form-control" name="password" type="password" autocomplete="current-password" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Entrar</button>
+        </form>
+
+        <p class="mt-4 mb-0 text-center">
+          Ainda não tens conta?
+          <a href="/auth/register">Criar conta</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

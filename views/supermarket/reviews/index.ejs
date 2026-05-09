@@ -1,0 +1,44 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Avaliações recebidas</h1>
+    <p class="bo-page-subtitle">Feedback dos clientes e respostas da loja.</p>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <p class="mb-0">Rating médio: <strong><%= locals.averageRating || 0 %>/5</strong></p>
+  </div>
+</div>
+
+<div class="vstack gap-3">
+  <% if (locals.reviews && locals.reviews.length) { %>
+    <% locals.reviews.forEach((r) => { %>
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <span class="badge text-bg-warning text-dark"><%= r.rating %>/5</span>
+              <span class="small text-muted ms-2"><%= new Date(r.createdAt).toLocaleString("pt-PT") %></span>
+            </div>
+            <span class="small text-muted"><%= (r.author && r.author.name) || "Cliente" %></span>
+          </div>
+          <p class="mt-2 mb-3"><%= r.comment || "Sem comentário." %></p>
+
+          <% if (r.reply && r.reply.text) { %>
+            <div class="bo-empty-state">
+              <strong>Resposta:</strong> <%= r.reply.text %>
+            </div>
+          <% } else { %>
+            <form method="POST" action="/supermarket/reviews/<%= r._id %>/reply" class="d-flex gap-2">
+              <input name="reply" class="form-control" placeholder="Responder à avaliação" required>
+              <button class="btn btn-outline-primary" type="submit">Responder</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <div class="bo-empty-state">Ainda não existem avaliações para mostrar.</div>
+  <% } %>
+</div>

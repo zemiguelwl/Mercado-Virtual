@@ -1,0 +1,69 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Utilizadores</h1>
+    <p class="bo-page-subtitle">Controlo de contas por perfil e estado.</p>
+  </div>
+</div>
+
+<form method="GET" action="/admin/users" class="row g-2 mb-3">
+  <div class="col-12 col-md-4">
+    <label for="role" class="form-label">Filtrar por role</label>
+    <select id="role" name="role" class="form-select">
+      <option value="" <%= !locals.currentRole ? "selected" : "" %>>Todos</option>
+      <option value="client" <%= locals.currentRole === "client" ? "selected" : "" %>>Cliente</option>
+      <option value="supermarket" <%= locals.currentRole === "supermarket" ? "selected" : "" %>>Supermercado</option>
+      <option value="courier" <%= locals.currentRole === "courier" ? "selected" : "" %>>Estafeta</option>
+      <option value="admin" <%= locals.currentRole === "admin" ? "selected" : "" %>>Admin</option>
+    </select>
+  </div>
+  <div class="col-12 col-md-auto d-flex align-items-end">
+    <button class="btn btn-primary">Aplicar filtro</button>
+  </div>
+</form>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.users && locals.users.length) { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Estado</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.users.forEach((u) => { %>
+              <tr>
+                <td><%= u.name %></td>
+                <td><%= u.email || "Sem email" %></td>
+                <td><span class="badge text-bg-light border"><%= u.role %></span></td>
+                <td>
+                  <span class="badge text-bg-<%= u.isActive ? 'success' : 'secondary' %>">
+                    <%= u.isActive ? "Ativo" : "Inativo" %>
+                  </span>
+                </td>
+                <td class="text-end">
+                  <% if (u.role !== "admin") { %>
+                    <form method="POST" action="/admin/users/<%= u._id %>/<%= u.isActive ? 'deactivate' : 'activate' %>">
+                      <button class="btn btn-sm <%= u.isActive ? 'btn-outline-danger' : 'btn-outline-success' %>" type="submit">
+                        <%= u.isActive ? "Desativar" : "Ativar" %>
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <span class="text-muted small">Sem ação</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Sem utilizadores para mostrar.</p>
+    <% } %>
+  </div>
+</div>

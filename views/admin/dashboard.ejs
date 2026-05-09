@@ -1,0 +1,68 @@
+<div class="bo-page-header mb-4">
+  <div>
+    <h1 class="h3 mb-1">Dashboard Admin</h1>
+    <p class="bo-page-subtitle">Visão global da plataforma.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4">
+    <div class="card bo-stat-card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Total de utilizadores</p>
+        <p class="display-6 mb-0"><%= locals.totalUsers || 0 %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card bo-stat-card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Supermercados aprovados</p>
+        <p class="display-6 mb-0"><%= locals.activeSupermarkets || 0 %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card bo-stat-card h-100">
+      <div class="card-body">
+        <p class="text-muted mb-1">Total de encomendas</p>
+        <p class="display-6 mb-0"><%= locals.totalOrders || 0 %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-white">
+    <h2 class="h5 mb-0">Supermercados pendentes</h2>
+  </div>
+  <div class="card-body">
+    <% if (locals.pendingSupermarkets && locals.pendingSupermarkets.length) { %>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.pendingSupermarkets.forEach((sm) => { %>
+              <tr>
+                <td><%= sm.name %></td>
+                <td><%= sm.user && sm.user.email ? sm.user.email : "N/A" %></td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="/admin/supermarkets?status=pending">Gerir</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted mb-0">Não existem supermercados pendentes.</p>
+    <% } %>
+  </div>
+</div>
+

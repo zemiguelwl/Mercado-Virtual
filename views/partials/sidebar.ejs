@@ -1,0 +1,5 @@
+<aside>
+  <% if (user?.role === 'admin') { %><a href="/admin/dashboard">Admin</a><% } %>
+  <% if (user?.role === 'supermarket') { %><a href="/supermarket/dashboard">Supermercado</a><% } %>
+  <% if (user?.role === 'courier') { %><a href="/courier/dashboard">Courier</a><% } %>
+</aside>

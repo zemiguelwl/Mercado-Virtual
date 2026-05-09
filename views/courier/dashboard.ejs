@@ -1,0 +1,77 @@
+<div class="bo-page-header mb-4">
+  <div>
+    <h1 class="h3 mb-1">Dashboard Estafeta</h1>
+    <p class="bo-page-subtitle">Estado atual das entregas e desempenho.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-7">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Ações da entrega ativa</h2>
+      </div>
+      <div class="card-body">
+        <% if (locals.activeDelivery) { %>
+          <p class="mb-3">Estado atual: <span class="badge bo-soft-badge"><%= locals.activeDelivery.status %></span></p>
+
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <% if (locals.activeDelivery.status === "accepted") { %>
+              <% if (locals.activeOrder && locals.activeOrder.status === 'ready') { %>
+                <form method="POST" action="/courier/deliveries/<%= locals.activeDelivery._id %>/picked-up">
+                  <button class="btn btn-primary" type="submit">Marcar levantamento</button>
+                </form>
+              <% } else { %>
+                <div class="alert alert-warning d-flex align-items-center w-100 mb-0" role="alert">
+                  <i class="bi bi-clock-history me-2"></i>
+                  <div>
+                    <strong>Aguarde:</strong> O supermercado ainda está a preparar os itens.
+                  </div>
+                </div>
+              <% } %>
+            <% } %>
+
+            <% if (locals.activeDelivery.status === "picked_up") { %>
+              <form method="POST" action="/courier/deliveries/<%= locals.activeDelivery._id %>/delivered">
+                <button class="btn btn-success" type="submit">Marcar entregue ao cliente</button>
+              </form>
+            <% } %>
+          </div>
+
+          <form method="POST" action="/courier/deliveries/<%= locals.activeDelivery._id %>/cancel" class="row g-2">
+            <div class="col-12 col-md-8">
+              <input name="reason" class="form-control" placeholder="Motivo do cancelamento (opcional)">
+            </div>
+            <div class="col-12 col-md-4 d-grid">
+              <button class="btn btn-outline-danger" type="submit">Cancelar entrega</button>
+            </div>
+          </form>
+        <% } else { %>
+          <p class="text-muted mb-0">Não tens entregas ativas neste momento.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card h-100">
+      <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Top supermercados</h2>
+      </div>
+      <div class="card-body">
+        <% if (locals.topSupermarkets && locals.topSupermarkets.length) { %>
+          <ul class="list-group list-group-flush">
+            <% locals.topSupermarkets.forEach((row, idx) => { %>
+              <li class="list-group-item px-0 d-flex justify-content-between">
+                <span><%= idx + 1 %>. <%= row.supermarketName || "Supermercado removido" %></span>
+                <span class="badge bo-soft-badge"><%= row.total %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted mb-0">Sem entregas concluídas ainda.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+<nav class="navbar navbar-expand-lg navbar-dark catalog-nav mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="/catalog">Mercadinho Virtual</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="/catalog">Catálogo</a></li>
+        <li class="nav-item"><a class="nav-link" href="/catalog/compare">Comparar preços</a></li>
+        <% if (user && user.role === 'client') { %>
+          <li class="nav-item"><a class="nav-link" href="/client/dashboard">Conta</a></li>
+          <li class="nav-item"><a class="nav-link" href="/client/cart">Carrinho</a></li>
+          <li class="nav-item"><a class="nav-link" href="/client/orders">Encomendas</a></li>
+        <% } else if (!user) { %>
+          <li class="nav-item"><a class="nav-link" href="/auth/login?next=/client/orders">Encomendas</a></li>
+        <% } %>
+      </ul>
+      <ul class="navbar-nav">
+        <% if (!user) { %>
+          <li class="nav-item"><a class="nav-link" href="/auth/login">Entrar</a></li>
+          <li class="nav-item"><a class="nav-link" href="/auth/register">Registar</a></li>
+        <% } else { %>
+          <li class="nav-item"><span class="navbar-text me-2"><%= user.name %></span></li>
+          <li class="nav-item">
+            <form method="post" action="/auth/logout" class="d-inline"><button class="btn btn-outline-light btn-sm" type="submit">Sair</button></form>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</nav>

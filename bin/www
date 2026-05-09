@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+require("dotenv").config();
+const mongoose = require("mongoose");
+const app = require("../app");
+
+const port = normalizePort(process.env.PORT || "3000");
+app.set("port", port);
+
+function normalizePort(val) {
+  const parsedPort = parseInt(val, 10);
+  if (Number.isNaN(parsedPort)) return val;
+  if (parsedPort >= 0) return parsedPort;
+  return false;
+}
+
+const mongoUri = process.env.DB_URI || process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.error("Erro: define DB_URI ou MONGODB_URI no ficheiro .env");
+  process.exit(1);
+}
+
+mongoose
+  .connect(mongoUri)
+  .then(() => {
+    console.log("MongoDB conectado");
+    app.listen(port, () => {
+      console.log(`Servidor em http://localhost:${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Erro ao conectar MongoDB:", err);
+    process.exit(1);
+  });

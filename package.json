@@ -1,0 +1,35 @@
+{
+  "name": "mercadinho-virtual",
+  "version": "1.0.0",
+  "description": "Mercadinho Virtual - Milestone 1",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./bin/www",
+    "dev": "nodemon ./bin/www",
+    "seed": "node seed.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "axios": "^1.15.0",
+    "bcrypt": "^6.0.0",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.10",
+    "express": "^4.22.1",
+    "express-rate-limit": "^7.5.1",
+    "express-session": "^1.19.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^7.2.0",
+    "mailtrap": "^4.5.1",
+    "method-override": "^3.0.0",
+    "mongoose": "^8.23.0",
+    "multer": "^2.1.1",
+    "nodemailer": "^7.0.7"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "mongodb-memory-server": "^11.0.1",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
+  }
+}

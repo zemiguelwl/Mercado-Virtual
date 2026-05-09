@@ -1,0 +1,52 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Histórico de entregas</h1>
+    <p class="bo-page-subtitle">Registo de entregas com ações rápidas por estado.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.deliveries && locals.deliveries.length) { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Entrega</th>
+              <th>Pedido</th>
+              <th>Estado</th>
+              <th>Criada em</th>
+              <th class="text-end">Ação rápida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.deliveries.forEach((d) => { %>
+              <tr>
+                <td>#<%= String(d._id).slice(-6).toUpperCase() %></td>
+                <td>#<%= d.order ? String(d.order._id).slice(-6).toUpperCase() : "N/A" %></td>
+                <td><span class="badge bo-soft-badge"><%= d.status %></span></td>
+                <td><%= d.createdAt ? new Date(d.createdAt).toLocaleString("pt-PT") : "-" %></td>
+                <td class="text-end">
+                  <div class="d-flex justify-content-end gap-2">
+                    <% if (d.status === "accepted") { %>
+                      <form method="POST" action="/courier/deliveries/<%= d._id %>/picked-up">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Marcar levantamento</button>
+                      </form>
+                    <% } %>
+                    <% if (d.status === "picked_up") { %>
+                      <form method="POST" action="/courier/deliveries/<%= d._id %>/delivered">
+                        <button class="btn btn-sm btn-success" type="submit">Marcar entregue</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Sem histórico de entregas.</p>
+    <% } %>
+  </div>
+</div>

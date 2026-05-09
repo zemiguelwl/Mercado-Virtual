@@ -1,0 +1,74 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Catálogo de produtos</h1>
+    <p class="bo-page-subtitle">Pesquisa e comparação entre supermercados aprovados.</p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="/catalog" class="row g-2">
+      <div class="col-md-4">
+        <input class="form-control" name="q" placeholder="Pesquisar por nome" value="<%= q || '' %>">
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" name="category">
+          <option value="">Todas as categorias</option>
+          <% categories.forEach(c => { %>
+            <option value="<%= c._id %>" <%= String(category) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" name="sort">
+          <option value="name_asc" <%= sort === 'name_asc' ? 'selected' : '' %>>Nome A-Z</option>
+          <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Preço ↑</option>
+          <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Preço ↓</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" name="supermarket">
+          <option value="">Todos os supermercados</option>
+          <% supermarkets.forEach(s => { %>
+            <option value="<%= s._id %>" <%= String(supermarket) === String(s._id) ? 'selected' : '' %>><%= s.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">Filtrar</button>
+        <a class="btn btn-outline-secondary" href="/catalog/compare?name=<%= encodeURIComponent(q || 'leite') %>">Comparar preços (exemplo)</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <% products.forEach(p => { %>
+    <div class="col-12 col-sm-6 col-lg-4">
+      <article class="card h-100">
+        <img
+          src="<%= p.image || '/images/product-placeholder.svg' %>"
+          class="card-img-top product-top-image"
+          alt="Imagem de <%= p.name %>"
+        >
+        <div class="card-body d-flex flex-column">
+          <h2 class="h6 mb-1"><%= p.name %></h2>
+          <p class="text-muted mb-1"><%= p.category?.name || 'Sem categoria' %> · <%= p.supermarket?.name || 'Sem supermercado' %></p>
+          <p class="fw-bold mb-2">€<%= Number(p.price).toFixed(2) %></p>
+          <div class="mt-auto">
+            <% if (user && user.role === 'client') { %>
+              <form method="post" action="/client/cart/add" class="d-flex gap-2">
+                <input type="hidden" name="productId" value="<%= p._id %>">
+                <input class="form-control form-control-sm" type="number" name="quantity" value="1" min="1" max="<%= p.stock %>" style="max-width:80px">
+                <button class="btn btn-sm btn-success" type="submit">Adicionar</button>
+              </form>
+            <% } else { %>
+              <a class="btn btn-sm btn-outline-primary" href="/auth/login?next=/catalog">Entrar para comprar</a>
+            <% } %>
+          </div>
+        </div>
+      </article>
+    </div>
+  <% }) %>
+</div>
+<% if (!products.length) { %><p class="bo-empty-state">Sem resultados.</p><% } %>

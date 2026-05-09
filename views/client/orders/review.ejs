@@ -1,0 +1,62 @@
+<div class="container pb-5">
+  <div class="bo-page-header">
+    <div>
+      <h1 class="h3 mb-1">Avaliar encomenda</h1>
+      <p class="bo-page-subtitle"><strong>#<%= order._id.toString().slice(-6).toUpperCase() %></strong> - <%= order.supermarket.name %></p>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="/client/orders/<%= order._id %>">Voltar à encomenda</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post" action="/client/orders/<%= order._id %>/review">
+        <div class="row g-3">
+      <div class="col-md-6">
+        <h4>Supermercado: <%= order.supermarket.name %></h4>
+        <div class="mb-3">
+          <label for="supermarketRating" class="form-label">Classificação</label>
+          <select name="supermarketRating" id="supermarketRating" class="form-select" required>
+            <option value="">Escolhe uma classificação...</option>
+            <option value="5">⭐⭐⭐⭐⭐ Excelente (5)</option>
+            <option value="4">⭐⭐⭐⭐ Muito Bom (4)</option>
+            <option value="3">⭐⭐⭐ Bom (3)</option>
+            <option value="2">⭐⭐ Satisfatório (2)</option>
+            <option value="1">⭐ Insatisfatório (1)</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="supermarketComment" class="form-label">Comentário (Opcional)</label>
+          <textarea name="supermarketComment" id="supermarketComment" class="form-control" rows="3" maxlength="500" placeholder="Deixa o teu comentário..."></textarea>
+          <small class="text-muted">Máximo 500 caracteres</small>
+        </div>
+      </div>
+
+      <% if (order.deliveryMethod === 'courier' && delivery && delivery.courier) { %>
+        <div class="col-md-6">
+          <h4>Entrega (Estafeta)</h4>
+          <div class="mb-3">
+            <label for="courierRating" class="form-label">Classificação</label>
+            <select name="courierRating" id="courierRating" class="form-select">
+              <option value="">Não avaliar</option>
+              <option value="5">⭐⭐⭐⭐⭐ Excelente (5)</option>
+              <option value="4">⭐⭐⭐⭐ Muito Bom (4)</option>
+              <option value="3">⭐⭐⭐ Bom (3)</option>
+              <option value="2">⭐⭐ Satisfatório (2)</option>
+              <option value="1">⭐ Insatisfatório (1)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="courierComment" class="form-label">Comentário (Opcional)</label>
+            <textarea name="courierComment" id="courierComment" class="form-control" rows="3" maxlength="500" placeholder="Deixa o teu comentário..."></textarea>
+            <small class="text-muted">Máximo 500 caracteres</small>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+        <button type="submit" class="btn btn-primary">Submeter Avaliação</button>
+        <a href="/client/orders/<%= order._id %>" class="btn btn-secondary">Cancelar</a>
+      </form>
+    </div>
+  </div>
+</div>

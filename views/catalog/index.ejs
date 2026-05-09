@@ -1,0 +1,8 @@
+<%- include("../layouts/catalog-shell", {
+  title: "Catálogo | Mercadinho Virtual",
+  currentPath: "/catalog",
+  topbarSearchAction: "/catalog",
+  topbarSearchName: "q",
+  topbarSearchValue: q || "",
+  body: include("./partials/index-body")
+}) %>

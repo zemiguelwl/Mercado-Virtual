@@ -1,0 +1,111 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Cupões globais</h1>
+    <p class="bo-page-subtitle">Gestão de campanhas, envios e validade.</p>
+  </div>
+  <a class="btn btn-primary btn-sm" href="/admin/coupons/create">Novo cupão</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <% if (locals.coupons && locals.coupons.length) { %>
+      <div class="vstack gap-3">
+        <% locals.coupons.forEach((c) => { %>
+          <div class="border rounded p-3">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <div class="fw-semibold"><%= c.code %></div>
+                <div class="small text-muted"><%= c.description || "Sem descrição" %></div>
+              </div>
+              <span class="badge text-bg-<%= c.isActive ? 'success' : 'secondary' %>">
+                <%= c.isActive ? "Ativo" : "Inativo" %>
+              </span>
+            </div>
+
+            <div class="row g-2 small text-muted mt-2">
+              <div class="col-12 col-md-4">
+                Tipo:
+                <strong>
+                  <%= c.discountType === "percentage" ? "Percentagem" : c.discountType === "fixed_amount" ? "Valor fixo" : "Entrega gratuita" %>
+                </strong>
+              </div>
+              <div class="col-12 col-md-4">
+                Valor:
+                <strong>
+                  <%= c.discountType === "percentage" ? `${Number(c.discountValue || 0)}%` : c.discountType === "fixed_amount" ? `€${Number(c.discountValue || 0).toFixed(2)}` : "€0" %>
+                </strong>
+              </div>
+              <div class="col-12 col-md-4">
+                Usos: <strong><%= Number(c.currentUses || 0) %>/<%= c.maxUses == null ? "∞" : c.maxUses %></strong>
+              </div>
+              <div class="col-12 col-md-6">
+                Enviado a <strong><%= Number(c.sentCount || 0) %></strong> utilizador(es)
+              </div>
+              <div class="col-12 col-md-6">
+                Validade:
+                <strong><%= new Date(c.validFrom).toLocaleDateString("pt-PT") %> - <%= new Date(c.validUntil).toLocaleDateString("pt-PT") %></strong>
+              </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <form method="POST" action="/admin/coupons/<%= c._id %>/send">
+                <button type="submit" class="btn btn-sm btn-outline-primary">Enviar</button>
+              </form>
+              <form method="POST" action="/admin/coupons/<%= c._id %>/toggle">
+                <button type="submit" class="btn btn-sm btn-outline-warning">
+                  <%= c.isActive ? "Desativar" : "Ativar" %>
+                </button>
+              </form>
+              <form method="POST" action="/admin/coupons/<%= c._id %>?_method=DELETE">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
+              </form>
+            </div>
+
+            <details class="mt-3">
+              <summary class="small fw-semibold text-primary">Editar cupão</summary>
+              <form method="POST" action="/admin/coupons/<%= c._id %>?_method=PUT" class="row g-2 mt-2">
+                <div class="col-12 col-md-4">
+                  <label class="form-label small">Descrição</label>
+                  <input class="form-control form-control-sm" name="description" value="<%= c.description || '' %>">
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Tipo</label>
+                  <select class="form-select form-select-sm" name="discountType">
+                    <option value="percentage" <%= c.discountType === "percentage" ? "selected" : "" %>>Percentagem</option>
+                    <option value="fixed_amount" <%= c.discountType === "fixed_amount" ? "selected" : "" %>>Valor fixo</option>
+                    <option value="fixed_shipping" <%= c.discountType === "fixed_shipping" ? "selected" : "" %>>Entrega grátis</option>
+                  </select>
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Desconto</label>
+                  <input class="form-control form-control-sm" type="number" step="0.01" name="discountValue" value="<%= c.discountValue %>" required>
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Mínimo</label>
+                  <input class="form-control form-control-sm" type="number" step="0.01" name="minOrderValue" value="<%= c.minOrderValue || 0 %>">
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small">Max usos</label>
+                  <input class="form-control form-control-sm" type="number" name="maxUses" value="<%= c.maxUses == null ? '' : c.maxUses %>">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small">Válido de</label>
+                  <input class="form-control form-control-sm" type="date" name="validFrom" value="<%= new Date(c.validFrom).toISOString().slice(0, 10) %>" required>
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small">Válido até</label>
+                  <input class="form-control form-control-sm" type="date" name="validUntil" value="<%= new Date(c.validUntil).toISOString().slice(0, 10) %>" required>
+                </div>
+                <div class="col-12 col-md-2 d-grid d-md-flex align-items-end">
+                  <button class="btn btn-sm btn-success w-100" type="submit">Guardar</button>
+                </div>
+              </form>
+            </details>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="text-muted mb-0">Ainda não existem cupões globais.</p>
+    <% } %>
+  </div>
+</div>

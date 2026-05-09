@@ -1,0 +1,43 @@
+<div class="bo-page-header">
+  <div>
+    <h1 class="h3 mb-1">Encomendas</h1>
+    <p class="bo-page-subtitle">Acompanhamento de encomendas da loja.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <% if (locals.orders && locals.orders.length) { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Ref.</th>
+              <th>Cliente</th>
+              <th>Estado</th>
+              <th>Método</th>
+              <th>Total</th>
+              <th class="text-end">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locals.orders.forEach((o) => { %>
+              <tr>
+                <td>#<%= String(o._id).slice(-6).toUpperCase() %></td>
+                <td><%= (o.client && o.client.name) || "N/A" %></td>
+                <td><span class="badge bo-soft-badge"><%= o.status %></span></td>
+                <td><%= o.deliveryMethod %></td>
+                <td>€<%= Number(o.total || 0).toFixed(2) %></td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="/supermarket/orders/<%= o._id %>">Detalhe</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-muted p-3 mb-0">Sem encomendas para mostrar.</p>
+    <% } %>
+  </div>
+</div>
