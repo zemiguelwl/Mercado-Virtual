@@ -297,11 +297,3 @@ services/
 | GET | `/admin/orders` | Monitorizar encomendas |
 | GET | `/admin/coupons` | Gerir cupões globais |
 
----
-
-## Milestones
-
-| Milestone | Âmbito | Estado |
-|---|---|---|
-| Milestone 1 | Backoffice (admin, supermercado, estafeta) + POS + catálogo | Concluído |
-| Milestone 2 | Frontoffice em Angular + REST API documentada com Swagger | Em desenvolvimento |
