@@ -1,0 +1,37 @@
+<mat-toolbar color="primary" class="navbar">
+  <a routerLink="/catalog" class="brand">
+    <mat-icon>storefront</mat-icon>
+    <span>Mercadinho Virtual</span>
+  </a>
+
+  <span class="spacer"></span>
+
+  <nav class="nav-links">
+    <a mat-button routerLink="/catalog" routerLinkActive="active-link">Catálogo</a>
+    <a mat-button routerLink="/catalog/supermarkets" routerLinkActive="active-link">Supermercados</a>
+    <a mat-button routerLink="/catalog/compare" routerLinkActive="active-link">Comparar</a>
+  </nav>
+
+  <!-- Carrinho -->
+  <a mat-icon-button routerLink="/cart" [matBadge]="cartCount" matBadgeColor="accent" [matBadgeHidden]="cartCount === 0">
+    <mat-icon>shopping_cart</mat-icon>
+  </a>
+
+  <!-- Utilizador autenticado -->
+  <ng-container *ngIf="currentUser; else guestMenu">
+    <button mat-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon> {{ currentUser.name }}
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item routerLink="/profile"><mat-icon>person</mat-icon> Perfil</button>
+      <button mat-menu-item routerLink="/orders"><mat-icon>receipt_long</mat-icon> Encomendas</button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()"><mat-icon>logout</mat-icon> Terminar sessão</button>
+    </mat-menu>
+  </ng-container>
+
+  <ng-template #guestMenu>
+    <a mat-button routerLink="/auth/login">Entrar</a>
+    <a mat-raised-button routerLink="/auth/register">Registar</a>
+  </ng-template>
+</mat-toolbar>

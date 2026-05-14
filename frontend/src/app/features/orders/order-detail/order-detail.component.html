@@ -1,0 +1,66 @@
+<div class="detail-page">
+  <div *ngIf="loading" class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <div *ngIf="!loading && order">
+    <div class="detail-header">
+      <button mat-button routerLink="/orders"><mat-icon>arrow_back</mat-icon> Voltar</button>
+      <h2>Encomenda #{{ order._id.slice(-6).toUpperCase() }}</h2>
+    </div>
+
+    <mat-error *ngIf="errorMessage" class="error-box">{{ errorMessage }}</mat-error>
+
+    <div class="detail-grid">
+      <!-- Info principal -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Detalhes</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p><strong>Estado:</strong> {{ statusLabel[order.status] }}</p>
+          <p><strong>Supermercado:</strong> {{ order.supermarket?.name }}</p>
+          <p><strong>Entrega:</strong> {{ order.deliveryMethod === 'courier' ? 'Estafeta' : 'Levantamento em loja' }}</p>
+          <p><strong>Data:</strong> {{ order.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+          <p *ngIf="order.couponCode"><strong>Cupão:</strong> {{ order.couponCode }}</p>
+
+          <mat-divider class="divider"></mat-divider>
+          <div class="price-row"><span>Subtotal</span><span>{{ order.subtotal | currency:'EUR':'symbol':'1.2-2' }}</span></div>
+          <div class="price-row discount" *ngIf="order.discountAmount > 0">
+            <span>Desconto</span><span>-{{ order.discountAmount | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="price-row"><span>Entrega</span><span>{{ order.deliveryCost | currency:'EUR':'symbol':'1.2-2' }}</span></div>
+          <div class="price-row total"><span>Total</span><strong>{{ order.total | currency:'EUR':'symbol':'1.2-2' }}</strong></div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="warn" *ngIf="canCancel" (click)="cancel()" [disabled]="cancelling">
+            {{ cancelling ? 'A cancelar...' : 'Cancelar encomenda' }}
+          </button>
+          <button mat-raised-button color="accent" *ngIf="order.status === 'delivered' && !order.reviewSubmitted" (click)="goReview()">
+            <mat-icon>star</mat-icon> Avaliar
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Produtos -->
+      <mat-card>
+        <mat-card-header><mat-card-title>Produtos</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="item-row" *ngFor="let item of order.items">
+            <span>{{ item.productName }} × {{ item.quantity }}</span>
+            <strong>{{ item.productPrice * item.quantity | currency:'EUR':'symbol':'1.2-2' }}</strong>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Entrega -->
+      <mat-card *ngIf="delivery">
+        <mat-card-header><mat-card-title>Entrega</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <p><strong>Estado da entrega:</strong> {{ delivery.status }}</p>
+          <p *ngIf="delivery.courier"><strong>Estafeta:</strong> {{ delivery.courier.name }}</p>
+          <p *ngIf="delivery.courier"><strong>Contacto:</strong> {{ delivery.courier.phone }}</p>
+          <p *ngIf="delivery.deliveredAt"><strong>Entregue em:</strong> {{ delivery.deliveredAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

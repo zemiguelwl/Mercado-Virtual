@@ -1,0 +1,57 @@
+<div class="checkout-page" *ngIf="cart$ | async as cart">
+  <h2>Finalizar Encomenda</h2>
+  <mat-error *ngIf="errorMessage" class="error-box">{{ errorMessage }}</mat-error>
+
+  <div class="checkout-layout">
+    <!-- Resumo dos produtos -->
+    <mat-card class="items-card">
+      <mat-card-header><mat-card-title>Produtos</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="order-item" *ngFor="let item of cart.items">
+          <span>{{ item.productName }} × {{ item.quantity }}</span>
+          <strong>{{ item.productPrice * item.quantity | currency:'EUR':'symbol':'1.2-2' }}</strong>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Opções de entrega e cupão -->
+    <mat-card class="options-card">
+      <mat-card-header><mat-card-title>Entrega</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <mat-radio-group [(ngModel)]="selectedMethod" class="delivery-group">
+          <mat-radio-button *ngFor="let dm of deliveryOptions" [value]="dm.type" class="delivery-option">
+            {{ dm.label }}
+            <span *ngIf="dm.cost > 0"> — {{ dm.cost | currency:'EUR':'symbol':'1.2-2' }}</span>
+            <span *ngIf="dm.cost === 0"> — Grátis</span>
+          </mat-radio-button>
+        </mat-radio-group>
+
+        <mat-divider class="divider"></mat-divider>
+
+        <div class="coupon-row">
+          <mat-form-field appearance="outline" class="coupon-field">
+            <mat-label>Código de desconto</mat-label>
+            <input matInput [(ngModel)]="couponCode" (keyup.enter)="validateCoupon()" />
+          </mat-form-field>
+          <button mat-button (click)="validateCoupon()" [disabled]="validatingCoupon">Aplicar</button>
+        </div>
+        <p *ngIf="couponResult?.valid" class="coupon-ok">
+          ✓ Desconto de {{ couponResult.discountAmount | currency:'EUR':'symbol':'1.2-2' }} aplicado!
+        </p>
+        <p *ngIf="couponResult && !couponResult.valid" class="coupon-err">{{ couponResult.message }}</p>
+
+        <mat-divider class="divider"></mat-divider>
+
+        <div class="summary-line"><span>Subtotal</span><span>{{ subtotal | currency:'EUR':'symbol':'1.2-2' }}</span></div>
+        <div class="summary-line discount" *ngIf="discount > 0"><span>Desconto</span><span>-{{ discount | currency:'EUR':'symbol':'1.2-2' }}</span></div>
+        <div class="summary-line"><span>Entrega</span><span>{{ deliveryCost | currency:'EUR':'symbol':'1.2-2' }}</span></div>
+        <div class="summary-line total"><span>Total</span><strong>{{ total | currency:'EUR':'symbol':'1.2-2' }}</strong></div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()" [disabled]="loading">
+          {{ loading ? 'A processar...' : 'Confirmar encomenda' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

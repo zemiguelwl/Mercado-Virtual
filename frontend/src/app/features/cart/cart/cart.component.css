@@ -1,0 +1,16 @@
+.cart-page { padding: 24px; max-width: 860px; margin: 0 auto; }
+.empty-cart { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 64px; color: #777; }
+.empty-cart mat-icon { font-size: 64px; width: 64px; height: 64px; }
+.supermarket-label { display: flex; align-items: center; gap: 8px; color: #555; margin-bottom: 12px; }
+.cart-card { padding: 8px; }
+.cart-item { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eee; }
+.cart-item:last-child { border-bottom: none; }
+.item-img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; }
+.item-info { flex: 1; }
+.item-name { font-weight: 600; margin: 0; }
+.item-price { color: #555; font-size: 0.9rem; margin: 4px 0 0; }
+.item-qty { display: flex; align-items: center; gap: 4px; }
+.item-total { font-weight: 700; min-width: 80px; text-align: right; }
+.cart-summary { margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; }
+.summary-line { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 16px; }
+.summary-actions { display: flex; justify-content: flex-end; gap: 12px; }

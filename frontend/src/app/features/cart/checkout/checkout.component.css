@@ -1,0 +1,16 @@
+.checkout-page { padding: 24px; max-width: 900px; margin: 0 auto; }
+.error-box { display: block; margin-bottom: 16px; }
+.checkout-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+@media (max-width: 640px) { .checkout-layout { grid-template-columns: 1fr; } }
+.order-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; }
+.delivery-group { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+.delivery-option { padding: 4px 0; }
+.divider { margin: 16px 0; }
+.coupon-row { display: flex; gap: 8px; align-items: center; }
+.coupon-field { flex: 1; }
+.coupon-ok { color: #2e7d32; font-size: 0.9rem; }
+.coupon-err { color: #c62828; font-size: 0.9rem; }
+.summary-line { display: flex; justify-content: space-between; padding: 4px 0; }
+.discount { color: #2e7d32; }
+.total { font-size: 1.1rem; border-top: 2px solid #eee; padding-top: 8px; margin-top: 4px; }
+.submit-btn { width: 100%; margin-top: 8px; }

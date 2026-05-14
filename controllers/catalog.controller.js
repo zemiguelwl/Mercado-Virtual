@@ -25,7 +25,7 @@ async function index(req, res, next) {
       filter.supermarket = { $in: smIds };
     }
     if (q && String(q).trim()) {
-      filter.name = { $regex: String(q).trim(), $options: "i" };
+      filter.name = { $regex: String(q).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
     }
     if (category) filter.category = category;
 

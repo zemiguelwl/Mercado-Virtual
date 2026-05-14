@@ -1,0 +1,7 @@
+.compare-page { padding: 24px; max-width: 1000px; margin: 0 auto; }
+.search-row { display: flex; gap: 16px; align-items: center; margin-bottom: 24px; }
+.search-field { flex: 1; }
+.compare-table { width: 100%; }
+.price-cell { font-weight: 700; color: #1565c0; }
+.loading-state { display: flex; justify-content: center; padding: 48px; }
+.empty-msg { text-align: center; color: #777; padding: 32px; }

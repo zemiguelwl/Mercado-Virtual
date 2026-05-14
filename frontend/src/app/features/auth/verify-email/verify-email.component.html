@@ -1,0 +1,28 @@
+<div class="auth-container">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Verificar email</mat-card-title>
+      <mat-card-subtitle>Introduz o código de 6 dígitos enviado para o teu email.</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-error *ngIf="errorMessage" class="msg-box error-box">{{ errorMessage }}</mat-error>
+      <p *ngIf="successMessage" class="msg-box success-box">{{ successMessage }}</p>
+
+      <form (ngSubmit)="onSubmit()" *ngIf="!successMessage">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Código de verificação</mat-label>
+          <input matInput [(ngModel)]="code" name="code" maxlength="6" required />
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="loading">
+          {{ loading ? 'A verificar...' : 'Verificar' }}
+        </button>
+      </form>
+    </mat-card-content>
+    <mat-card-actions *ngIf="!successMessage">
+      <button mat-button (click)="resend()" [disabled]="resending">
+        {{ resending ? 'A reenviar...' : 'Reenviar código' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

@@ -1,4 +1,10 @@
 require("dotenv").config();
+
+if (!process.env.SESSION_SECRET) {
+  console.error("FATAL: SESSION_SECRET não está definido no ambiente. A aplicação não pode arrancar.");
+  process.exit(1);
+}
+
 const express = require("express");
 const session = require("express-session");
 const flash = require("connect-flash");
@@ -6,6 +12,8 @@ const methodOverride = require("method-override");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger/swagger");
 
 const app = express();
 
@@ -14,6 +22,19 @@ app.use(
     contentSecurityPolicy: false
   })
 );
+
+// Permitir CORS para o frontoffice Angular (localhost:4200)
+app.use((req, res, next) => {
+  const allowedOrigins = ["http://localhost:4200"];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -88,29 +109,39 @@ app.use((req, res, next) => {
 });
 
 const loginLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, 
+  windowMs: 10 * 60 * 1000,
   max: 10,
   skipSuccessfulRequests: true,
   message: "Demasiadas tentativas de login. Tenta novamente em 10 minutos."
 });
 app.use("/auth/login", loginLimiter);
 
+// Documentação Swagger — disponível em /api/docs
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// REST API para o frontoffice Angular
+app.use("/api/v1", require("./routes/api/index"));
+
+// Backoffice EJS (Milestone 1)
 app.use("/", require("./routes/index"));
 
 app.use((req, res) => {
   res.status(404).render("errors/404", { title: "Página não encontrada" });
 });
 
-// Middleware de erro global 
+// Middleware de erro global
 app.use((err, req, res, next) => {
   console.error("Erro não tratado:", err.stack || err.message);
   const message = process.env.NODE_ENV === "production"
     ? "Ocorreu um erro interno. Tenta novamente."
     : err.message;
-  // Tenta renderizar errors/500 se existir, senão usa errors/404 
+
+  if (req.path.startsWith("/api/")) {
+    return res.status(500).json({ message });
+  }
+
   res.status(500).render("errors/500", { title: "Erro interno", message }, (renderErr, html) => {
     if (renderErr) {
-
       return res.status(500).render("errors/404", { title: "Erro interno", message });
     }
     res.send(html);

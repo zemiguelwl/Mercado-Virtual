@@ -150,6 +150,8 @@ npm start
 
 > **Nota:** Em `NODE_ENV=development`, o login funciona via HTTP (localhost). Em `production`, é exigido HTTPS — não alterar para produção em ambiente local.
 
+> **Nota:** `SESSION_SECRET` é obrigatório — a aplicação não arranca sem esta variável definida.
+
 > **Nota:** Se `EMAIL_API_TOKEN` não estiver definido, o registo de novos utilizadores fica bloqueado. Usa as contas do `seed.js` para contornar.
 
 ---

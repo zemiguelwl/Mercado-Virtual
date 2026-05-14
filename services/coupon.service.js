@@ -163,5 +163,18 @@ async function sendCouponToAllVerifiedUsers(couponId) {
   };
 }
 
-module.exports = { validateAndApply, sendWelcomeCoupon, sendCouponToAllVerifiedUsers };
+// Incremento atómico: valida maxUses e incrementa numa só operação (evita TOCTOU)
+async function consumeCoupon(couponId) {
+  const result = await Coupon.findOneAndUpdate(
+    {
+      _id: couponId,
+      isActive: true,
+      $or: [{ maxUses: null }, { $expr: { $lt: ["$currentUses", "$maxUses"] } }]
+    },
+    { $inc: { currentUses: 1 } }
+  );
+  return result !== null;
+}
+
+module.exports = { validateAndApply, consumeCoupon, sendWelcomeCoupon, sendCouponToAllVerifiedUsers };
 

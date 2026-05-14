@@ -1,0 +1,38 @@
+<div class="sm-page">
+  <h2>Supermercados</h2>
+
+  <div *ngIf="loading" class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <div class="sm-grid" *ngIf="!loading">
+    <mat-card class="sm-card" *ngFor="let sm of supermarkets">
+      <mat-card-header>
+        <mat-card-title>{{ sm.name }}</mat-card-title>
+        <mat-card-subtitle>
+          <mat-icon class="loc-icon">location_on</mat-icon> {{ sm.location }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ sm.description }}</p>
+        <div class="status-row">
+          <mat-chip [color]="sm.isOpen ? 'primary' : 'warn'" selected>
+            {{ sm.isOpen ? 'Aberto' : 'Fechado' }}
+          </mat-chip>
+          <span class="rating" *ngIf="sm.rating?.count > 0">
+            ★ {{ sm.rating.average | number:'1.1-1' }} ({{ sm.rating.count }})
+          </span>
+        </div>
+        <div class="delivery-methods" *ngIf="sm.deliveryMethods?.length">
+          <mat-chip *ngFor="let dm of sm.deliveryMethods" [disabled]="!dm.active">
+            {{ dm.label }}
+            <span *ngIf="dm.cost > 0"> — {{ dm.cost | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </mat-chip>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="viewProducts(sm._id)">
+          Ver produtos
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

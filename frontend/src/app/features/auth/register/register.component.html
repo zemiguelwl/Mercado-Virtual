@@ -1,0 +1,53 @@
+<div class="auth-container">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Criar conta</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-error *ngIf="errorMessage" class="error-box">{{ errorMessage }}</mat-error>
+
+      <form (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nome completo</mat-label>
+          <input matInput [(ngModel)]="form.name" name="name" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" [(ngModel)]="form.email" name="email" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" [(ngModel)]="form.password" name="password" required />
+          <mat-hint>Mínimo 6 caracteres</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Telefone</mat-label>
+          <input matInput [(ngModel)]="form.phone" name="phone" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Morada</mat-label>
+          <input matInput [(ngModel)]="form.address" name="address" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Tipo de conta</mat-label>
+          <mat-select [(ngModel)]="form.role" name="role">
+            <mat-option value="client">Cliente</mat-option>
+            <mat-option value="courier">Estafeta</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="loading">
+          {{ loading ? 'A criar conta...' : 'Criar conta' }}
+        </button>
+      </form>
+    </mat-card-content>
+    <mat-card-actions>
+      <p>Já tens conta? <a routerLink="/auth/login">Entrar aqui</a></p>
+    </mat-card-actions>
+  </mat-card>
+</div>

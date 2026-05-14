@@ -4,10 +4,10 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Supermarket = require("../models/Supermarket");
 const Delivery = require("../models/Delivery");
-const Coupon = require("../models/Coupon");
 const Review = require("../models/Review");
 const { transitionOrderStatus } = require("../services/order.service");
-const { validateAndApply } = require("../services/coupon.service");
+const { validateAndApply, consumeCoupon } = require("../services/coupon.service");
+const { recalculateSupermarketRating, recalculateCourierRating } = require("./review.controller");
 
 function ensureCart(session) {
   if (!session.cart) session.cart = { supermarketId: null, items: [] };
@@ -61,6 +61,10 @@ async function profilePost(req, res, next) {
     req.flash("success", "Perfil atualizado.");
     res.redirect("/client/profile");
   } catch (err) {
+    if (err.code === 11000) {
+      req.flash("error", "Este telefone já está associado a outra conta.");
+      return res.redirect("/client/profile");
+    }
     next(err);
   }
 }
@@ -114,10 +118,8 @@ async function cancelOrder(req, res, next) {
     try {
       await transitionOrderStatus(req.params.id, "cancelled", req.session.user.id, req.body.reason || "Cancelado pelo cliente");
       req.flash("success", "Encomenda cancelada.");
-      // parar o fluxo aqui após o sucesso
       return res.redirect(`/client/orders/${req.params.id}`);
     } catch (err) {
-      // Se a transição falhar (ex: já não está pending), mostramos o erro e redirecionamos apenas uma vez
       req.flash("error", err.message);
       return res.redirect(`/client/orders/${req.params.id}`);
     }
@@ -125,7 +127,6 @@ async function cancelOrder(req, res, next) {
     next(err);
   }
 }
-
 
 async function cartView(req, res, next) {
   try {
@@ -135,8 +136,17 @@ async function cartView(req, res, next) {
     if (cart.supermarketId && cart.items.length) {
       const sm = await Supermarket.findById(cart.supermarketId).lean();
       supermarketName = sm?.name || "";
+
+      // Batch fetch para evitar N+1 queries
+      const productIds = cart.items.map((i) => i.productId);
+      const products = await Product.find({ _id: { $in: productIds } })
+        .populate("category", "name")
+        .lean();
+      const productMap = {};
+      products.forEach((p) => { productMap[String(p._id)] = p; });
+
       for (const line of cart.items) {
-        const p = await Product.findById(line.productId).populate("category", "name").lean();
+        const p = productMap[String(line.productId)];
         if (!p || !p.isActive || p.stock < line.quantity) {
           line.invalid = true;
         }
@@ -238,10 +248,17 @@ async function checkoutGet(req, res, next) {
       req.flash("error", "Supermercado inválido.");
       return res.redirect("/client/cart");
     }
+
+    // Batch fetch para evitar N+1 queries
+    const productIds = cart.items.map((i) => i.productId);
+    const products = await Product.find({ _id: { $in: productIds } }).lean();
+    const productMap = {};
+    products.forEach((p) => { productMap[String(p._id)] = p; });
+
     let subtotal = 0;
     const lines = [];
     for (const line of cart.items) {
-      const p = await Product.findById(line.productId);
+      const p = productMap[String(line.productId)];
       if (!p || String(p.supermarket) !== String(cart.supermarketId) || p.stock < line.quantity) {
         req.flash("error", "Atualiza o carrinho — alguns produtos já não estão disponíveis.");
         return res.redirect("/client/cart");
@@ -266,8 +283,10 @@ async function checkoutGet(req, res, next) {
 }
 
 async function checkoutPost(req, res, next) {
+  const cart = ensureCart(req.session);
+  const decremented = [];
+
   try {
-    const cart = ensureCart(req.session);
     const deliveryMethod = req.body.deliveryMethod;
     if (!cart.items.length || !cart.supermarketId) {
       req.flash("error", "Carrinho vazio.");
@@ -294,7 +313,6 @@ async function checkoutPost(req, res, next) {
     const user = await User.findById(req.session.user.id).lean();
     const orderItems = [];
     let subtotal = 0;
-    const decremented = [];
 
     for (const line of cart.items) {
       const qty = line.quantity;
@@ -305,13 +323,11 @@ async function checkoutPost(req, res, next) {
       );
       if (!product) {
         // Reverter stocks já decrementados
-        if (decremented.length) {
-          await Promise.all(
-            decremented.map((row) =>
-              Product.updateOne({ _id: row.productId, supermarket: cart.supermarketId }, { $inc: { stock: row.quantity } })
-            )
-          );
-        }
+        await Promise.all(
+          decremented.map((row) =>
+            Product.updateOne({ _id: row.productId }, { $inc: { stock: row.quantity } })
+          )
+        );
         req.flash("error", "Stock insuficiente para um dos produtos. Atualiza o carrinho.");
         return res.redirect("/client/cart");
       }
@@ -327,8 +343,6 @@ async function checkoutPost(req, res, next) {
 
     subtotal = Math.round(subtotal * 100) / 100;
 
-    // ── CUPÃO ─────────────────────────────────────────────────────────────────
-    // Validar e aplicar cupão se o cliente inseriu um código
     let discountAmount = 0;
     let couponCode = null;
     let deliveryFreeFromCoupon = false;
@@ -337,21 +351,22 @@ async function checkoutPost(req, res, next) {
     if (rawCouponCode) {
       const couponResult = await validateAndApply(rawCouponCode, cart.supermarketId, subtotal);
       if (couponResult.valid) {
-        discountAmount = couponResult.discountAmount;
-        couponCode = couponResult.code;
-        deliveryFreeFromCoupon = Boolean(couponResult.deliveryFree);
-        // Incrementar contador de utilizações de forma atómica
-        await Coupon.findByIdAndUpdate(couponResult.couponId, { $inc: { currentUses: 1 } });
+        // Incremento atómico: garante que maxUses não é ultrapassado em concorrência
+        const consumed = await consumeCoupon(couponResult.couponId);
+        if (consumed) {
+          discountAmount = couponResult.discountAmount;
+          couponCode = couponResult.code;
+          deliveryFreeFromCoupon = Boolean(couponResult.deliveryFree);
+        } else {
+          req.flash("error", "Cupão esgotado. A encomenda foi criada sem desconto.");
+        }
       } else {
-        // Cupão inválido, continuar sem desconto (não bloquear o checkout)
         req.flash("error", `Cupão inválido: ${couponResult.message} A encomenda foi criada sem desconto.`);
       }
     }
 
-    // Custo de entrega (gratuito se cupão de entrega grátis)
     const deliveryCost = deliveryFreeFromCoupon ? 0 : (Number(dm.cost) || 0);
     const total = Math.round((Math.max(0, subtotal - discountAmount) + deliveryCost) * 100) / 100;
-    // ──────────────────────────────────────────────────────────────────────────
 
     const order = await Order.create({
       supermarket: cart.supermarketId,
@@ -377,6 +392,14 @@ async function checkoutPost(req, res, next) {
     req.flash("success", `Encomenda #${order._id.toString().slice(-6).toUpperCase()} criada com sucesso.`);
     res.redirect(`/client/orders/${order._id}`);
   } catch (err) {
+    // Rollback de stock em caso de erro inesperado (ex: falha ao criar Order)
+    if (decremented.length) {
+      await Promise.all(
+        decremented.map((row) =>
+          Product.updateOne({ _id: row.productId }, { $inc: { stock: row.quantity } })
+        )
+      ).catch((rollbackErr) => console.error("Erro no rollback de stock:", rollbackErr.message));
+    }
     next(err);
   }
 }
@@ -404,7 +427,7 @@ async function reviewFormGet(req, res, next) {
       return res.redirect(`/client/orders/${req.params.id}`);
     }
 
-    const delivery = order.deliveryMethod === "courier" 
+    const delivery = order.deliveryMethod === "courier"
       ? await Delivery.findOne({ order: order._id })
           .populate("courier", "name phone")
           .lean()
@@ -441,7 +464,8 @@ async function reviewFormPost(req, res, next) {
     }
 
     try {
-      // proteção contra duplicados 
+      let reviewsCreated = 0;
+
       const existingSM = await Review.findOne({ order: orderId, targetType: "supermarket" });
       if (!existingSM && supermarketRating) {
         await Review.create({
@@ -452,21 +476,10 @@ async function reviewFormPost(req, res, next) {
           rating: parseInt(supermarketRating, 10),
           comment: supermarketComment || ""
         });
-
-        // Recalcular rating do supermercado imediatamente após criar a review
-        const smReviews = await Review.aggregate([
-          { $match: { targetType: "supermarket", targetId: order.supermarket._id, isVisible: true } },
-          { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } }
-        ]);
-        if (smReviews.length) {
-          await Supermarket.findByIdAndUpdate(order.supermarket._id, {
-            "rating.average": Math.round(smReviews[0].average * 10) / 10,
-            "rating.count": smReviews[0].count
-          });
-        }
+        reviewsCreated++;
+        await recalculateSupermarketRating(order.supermarket._id);
       }
 
-      // estafeta vai buscar encomenda apenas uma vez, reutilizar para criar review e recalcular rating
       if (order.deliveryMethod === "courier" && courierRating) {
         const delivery = await Delivery.findOne({ order: orderId }).sort({ createdAt: -1 });
         if (delivery?.courier) {
@@ -480,30 +493,24 @@ async function reviewFormPost(req, res, next) {
               rating: parseInt(courierRating, 10),
               comment: courierComment || ""
             });
-
-            // recalcular rating do courier 
-            const courierReviews = await Review.aggregate([
-              { $match: { targetType: "courier", targetId: new mongoose.Types.ObjectId(delivery.courier), isVisible: true } },
-              { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } }
-            ]);
-            if (courierReviews.length) {
-              await User.findByIdAndUpdate(delivery.courier, {
-                "rating.average": Math.round(courierReviews[0].average * 10) / 10,
-                "rating.count": courierReviews[0].count
-              });
-            }
+            reviewsCreated++;
+            await recalculateCourierRating(delivery.courier);
           }
         }
       }
 
-      await Order.findByIdAndUpdate(orderId, { reviewSubmitted: true });
-      req.flash("success", "Avaliação registada com sucesso!");
+      // Só marca como avaliada se pelo menos uma review foi efetivamente criada
+      if (reviewsCreated > 0) {
+        await Order.findByIdAndUpdate(orderId, { reviewSubmitted: true });
+        req.flash("success", "Avaliação registada com sucesso!");
+      } else {
+        req.flash("error", "Seleciona pelo menos uma avaliação antes de submeter.");
+      }
       return res.redirect(`/client/orders/${orderId}`);
     } catch (err) {
       console.error("Erro ao registar review:", err);
       req.flash("error", "Erro ao registar avaliação. Tenta novamente.");
-      next(err);
-      return res.redirect(`/client/orders/${orderId}`);
+      return next(err);
     }
   } catch (err) {
     next(err);

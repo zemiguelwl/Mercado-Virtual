@@ -33,23 +33,6 @@ async function validateClientCoupon(req, res, next) {
   }
 }
 
-async function applyAndIncrementCoupon(code, supermarketId, subtotal) {
-  if (!code || !String(code).trim()) return null;
-
-  const result = await validateAndApply(String(code).trim(), supermarketId, subtotal);
-  if (!result.valid) return null;
-
-  // Incrementar contador de utilizações de forma atómica
-  await Coupon.findByIdAndUpdate(result.couponId, { $inc: { currentUses: 1 } });
-
-  return {
-    discountAmount: result.discountAmount,
-    deliveryFree: Boolean(result.deliveryFree),
-    couponCode: result.code,
-    couponId: result.couponId
-  };
-}
-
 async function getCouponStats() {
   const [total, active, global, byType] = await Promise.all([
     Coupon.countDocuments(),
@@ -78,16 +61,8 @@ async function statsPage(req, res, next) {
       topUsed
     });
   } catch (err) {
-    console.error("statsPage:", err.message);
-    req.flash("error", "Erro ao carregar estatísticas.");
     next(err);
-    return res.redirect("/admin/coupons");
   }
 }
 
-module.exports = {
-  validateClientCoupon, 
-  applyAndIncrementCoupon, 
-  getCouponStats, 
-  statsPage 
-};
+module.exports = { validateClientCoupon, getCouponStats, statsPage };

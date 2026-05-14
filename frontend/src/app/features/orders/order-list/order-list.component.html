@@ -1,0 +1,31 @@
+<div class="orders-page">
+  <h2>As minhas encomendas</h2>
+
+  <div *ngIf="loading" class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <div *ngIf="!loading && orders.length === 0" class="empty-state">
+    <mat-icon>receipt_long</mat-icon>
+    <p>Ainda não fizeste nenhuma encomenda.</p>
+    <button mat-raised-button color="primary" routerLink="/catalog">Ir às compras</button>
+  </div>
+
+  <div class="orders-list" *ngIf="!loading && orders.length > 0">
+    <mat-card class="order-card" *ngFor="let o of orders" [routerLink]="['/orders', o._id]">
+      <mat-card-header>
+        <mat-card-title>
+          #{{ o._id.slice(-6).toUpperCase() }}
+          <mat-chip [color]="statusColor[o.status]" selected class="status-chip">
+            {{ statusLabel[o.status] }}
+          </mat-chip>
+        </mat-card-title>
+        <mat-card-subtitle>{{ o.supermarket?.name }} · {{ o.createdAt | date:'dd/MM/yyyy HH:mm' }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="order-summary">
+          <span>{{ o.items?.length }} artigo(s)</span>
+          <strong>{{ o.total | currency:'EUR':'symbol':'1.2-2' }}</strong>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

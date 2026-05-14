@@ -1,0 +1,52 @@
+<div class="compare-page">
+  <h2>Comparar Preços</h2>
+
+  <div class="search-row">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Nome do produto</mat-label>
+      <input matInput [(ngModel)]="searchInput" (keyup.enter)="onSearch()" placeholder="Ex: leite" />
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="onSearch()">
+      <mat-icon>search</mat-icon> Comparar
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-state"><mat-spinner diameter="40"></mat-spinner></div>
+  <p *ngIf="errorMessage" class="empty-msg">{{ errorMessage }}</p>
+
+  <div *ngIf="!loading && results.length > 0">
+    <h3>Resultados para "{{ searchName }}"</h3>
+    <table mat-table [dataSource]="results" class="compare-table mat-elevation-z2">
+      <ng-container matColumnDef="product">
+        <th mat-header-cell *matHeaderCellDef>Produto</th>
+        <td mat-cell *matCellDef="let r">{{ r.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="supermarket">
+        <th mat-header-cell *matHeaderCellDef>Supermercado</th>
+        <td mat-cell *matCellDef="let r">{{ r.supermarket?.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="location">
+        <th mat-header-cell *matHeaderCellDef>Localização</th>
+        <td mat-cell *matCellDef="let r">{{ r.supermarket?.location }}</td>
+      </ng-container>
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>Preço</th>
+        <td mat-cell *matCellDef="let r" class="price-cell">{{ r.price | currency:'EUR':'symbol':'1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef>Stock</th>
+        <td mat-cell *matCellDef="let r">{{ r.stock }}</td>
+      </ng-container>
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let r">
+          <button mat-button color="primary" (click)="addToCart(r)">
+            <mat-icon>add_shopping_cart</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="['product','supermarket','location','price','stock','action']"></tr>
+      <tr mat-row *matRowDef="let r; columns: ['product','supermarket','location','price','stock','action']"></tr>
+    </table>
+  </div>
+</div>

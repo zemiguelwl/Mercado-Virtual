@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const { isAuthenticated } = require("../middleware/auth.middleware");
 const { hasRole, isSupermarketApproved } = require("../middleware/role.middleware");
 const { uploadProduct } = require("../middleware/upload.middleware");
@@ -7,6 +8,12 @@ const product = require("../controllers/product.controller");
 const pos = require("../controllers/pos.controller");
 const review = require("../controllers/review.controller");
 const router = express.Router();
+
+const posCheckoutLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 60,
+  message: "Demasiadas vendas em pouco tempo. Tenta novamente em 10 minutos."
+});
 
 router.use(isAuthenticated);
 router.use(hasRole("supermarket"));
@@ -40,7 +47,7 @@ router.get("/pos/products", pos.searchProducts);
 router.get("/pos/clients", pos.searchClients);
 router.post("/pos/clients/create-quick", pos.createQuickClient);
 router.get("/pos/validate-coupon", pos.validateCoupon);
-router.post("/pos/checkout", pos.checkout);
+router.post("/pos/checkout", posCheckoutLimiter, pos.checkout);
 
 router.get("/coupons", supermarket.coupons);
 router.get("/coupons/create", supermarket.createCouponForm);

@@ -44,6 +44,8 @@ async function submitReview(req, res, next) {
     }
 
     try {
+      let reviewsCreated = 0;
+
       if (order.deliveryMethod === "courier" && courierRating) {
         const delivery = await Delivery.findOne({ order: orderId }).sort({ createdAt: -1 });
         if (delivery?.courier) {
@@ -57,16 +59,20 @@ async function submitReview(req, res, next) {
               rating: parseInt(courierRating, 10),
               comment: courierComment || ""
             });
+            reviewsCreated++;
             await recalculateCourierRating(delivery.courier);
           }
         }
       }
 
-      await Order.findByIdAndUpdate(orderId, { reviewSubmitted: true });
-      req.flash("success", "Avaliação registada com sucesso.");
+      if (reviewsCreated > 0) {
+        await Order.findByIdAndUpdate(orderId, { reviewSubmitted: true });
+        req.flash("success", "Avaliação registada com sucesso.");
+      } else {
+        req.flash("error", "Seleciona pelo menos uma avaliação antes de submeter.");
+      }
       return res.redirect(`/supermarket/orders/${orderId}`);
     } catch (err) {
-      console.error("submitReview:", err.message);
       req.flash("error", "Erro ao registar avaliação. Tenta novamente.");
       return res.redirect(`/supermarket/orders/${orderId}`);
     }
@@ -75,4 +81,4 @@ async function submitReview(req, res, next) {
   }
 }
 
-module.exports = { submitReview };
+module.exports = { submitReview, recalculateSupermarketRating, recalculateCourierRating };

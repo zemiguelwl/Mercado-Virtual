@@ -1,0 +1,17 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+  background: #f5f5f5;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 16px;
+}
+.full-width { width: 100%; margin-bottom: 12px; }
+.msg-box { display: block; margin-bottom: 16px; font-size: 14px; }
+.success-box { color: #2e7d32; background: #e8f5e9; padding: 10px; border-radius: 4px; }
+mat-card-actions { text-align: center; padding: 8px 16px 16px; }

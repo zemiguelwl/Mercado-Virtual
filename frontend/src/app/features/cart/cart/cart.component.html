@@ -1,0 +1,52 @@
+<div class="cart-page">
+  <h2>O meu carrinho</h2>
+
+  <div *ngIf="cart.items.length === 0" class="empty-cart">
+    <mat-icon>shopping_cart</mat-icon>
+    <p>O teu carrinho está vazio.</p>
+    <button mat-raised-button color="primary" routerLink="/catalog">Ver produtos</button>
+  </div>
+
+  <div *ngIf="cart.items.length > 0">
+    <p class="supermarket-label">
+      <mat-icon>store</mat-icon> {{ cart.supermarketName }}
+    </p>
+
+    <mat-card class="cart-card">
+      <div class="cart-item" *ngFor="let item of cart.items">
+        <img [src]="'/uploads/' + item.productImage" [alt]="item.productName" class="item-img"
+          (error)="$any($event.target).src='/images/no-image.png'" />
+        <div class="item-info">
+          <p class="item-name">{{ item.productName }}</p>
+          <p class="item-price">{{ item.productPrice | currency:'EUR':'symbol':'1.2-2' }}</p>
+        </div>
+        <div class="item-qty">
+          <button mat-icon-button (click)="updateQty(item.productId, item.quantity - 1)" [disabled]="item.quantity <= 1">
+            <mat-icon>remove</mat-icon>
+          </button>
+          <span>{{ item.quantity }}</span>
+          <button mat-icon-button (click)="updateQty(item.productId, item.quantity + 1)" [disabled]="item.quantity >= item.stock">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+        <p class="item-total">{{ item.productPrice * item.quantity | currency:'EUR':'symbol':'1.2-2' }}</p>
+        <button mat-icon-button color="warn" (click)="remove(item.productId)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </mat-card>
+
+    <div class="cart-summary">
+      <div class="summary-line">
+        <span>Subtotal</span>
+        <strong>{{ subtotal | currency:'EUR':'symbol':'1.2-2' }}</strong>
+      </div>
+      <div class="summary-actions">
+        <button mat-button color="warn" (click)="clear()">Esvaziar</button>
+        <button mat-raised-button color="primary" (click)="checkout()">
+          Finalizar encomenda
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

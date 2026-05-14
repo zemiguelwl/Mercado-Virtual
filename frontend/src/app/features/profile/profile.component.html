@@ -1,0 +1,60 @@
+<div class="profile-page">
+  <div *ngIf="loading" class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <div *ngIf="!loading && user" class="profile-layout">
+    <!-- Editar perfil -->
+    <mat-card class="profile-card">
+      <mat-card-header>
+        <mat-card-title>O meu perfil</mat-card-title>
+        <mat-card-subtitle>{{ user.email }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p *ngIf="successMessage" class="success-msg">{{ successMessage }}</p>
+        <mat-error *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</mat-error>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nome</mat-label>
+          <input matInput [(ngModel)]="form.name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Telefone</mat-label>
+          <input matInput [(ngModel)]="form.phone" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Morada</mat-label>
+          <input matInput [(ngModel)]="form.address" />
+        </mat-form-field>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving">
+          {{ saving ? 'A guardar...' : 'Guardar alterações' }}
+        </button>
+        <button mat-button color="warn" (click)="logout()">Terminar sessão</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Estatísticas -->
+    <div class="stats-col">
+      <mat-card class="stat-card">
+        <mat-card-header><mat-card-title>Encomendas</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <p class="stat-number">{{ orderCount }}</p>
+          <p class="stat-label">encomendas realizadas</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button routerLink="/orders">Ver todas</button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="stat-card" *ngIf="topProducts.length > 0">
+        <mat-card-header><mat-card-title>Produtos mais comprados</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="top-item" *ngFor="let p of topProducts">
+            <span>{{ p._id }}</span>
+            <mat-chip>{{ p.totalQty }}×</mat-chip>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

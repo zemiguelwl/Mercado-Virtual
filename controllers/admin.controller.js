@@ -1,11 +1,14 @@
 const User = require("../models/User");
 const Supermarket = require("../models/Supermarket");
+const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Category = require("../models/Category");
 const Coupon = require("../models/Coupon");
 const Review = require("../models/Review");
 const { transitionOrderStatus } = require("../services/order.service");
 const couponService = require("../services/coupon.service");
+
+const VALID_SUPERMARKET_STATUSES = ["pending", "approved", "rejected"];
 
 async function dashboard(req, res, next) {
   try {
@@ -24,7 +27,9 @@ async function dashboard(req, res, next) {
 async function supermarkets(req, res, next) {
   try {
     const filter = {};
-    if (req.query.status) filter.status = req.query.status;
+    if (req.query.status && VALID_SUPERMARKET_STATUSES.includes(req.query.status)) {
+      filter.status = req.query.status;
+    }
     const supermarkets = await Supermarket.find(filter).populate("user", "name email phone").lean();
     res.render("admin/supermarkets", { title: "Supermercados", supermarkets, currentStatus: req.query.status || "" });
   } catch (err) {
@@ -97,10 +102,19 @@ async function categories(req, res, next) {
 
 async function createCategory(req, res, next) {
   try {
-    await Category.create({ name: req.body.name, description: req.body.description, createdBy: req.session.user.id });
+    const name = String(req.body.name || "").trim();
+    if (!name) {
+      req.flash("error", "O nome da categoria é obrigatório.");
+      return res.redirect("/admin/categories");
+    }
+    await Category.create({ name, description: req.body.description, createdBy: req.session.user.id });
     req.flash("success", "Categoria criada.");
     res.redirect("/admin/categories");
   } catch (err) {
+    if (err.code === 11000) {
+      req.flash("error", "Já existe uma categoria com esse nome.");
+      return res.redirect("/admin/categories");
+    }
     next(err);
   }
 }
@@ -118,7 +132,9 @@ async function updateCategory(req, res, next) {
 async function deleteCategory(req, res, next) {
   try {
     await Category.findByIdAndUpdate(req.params.id, { isActive: false });
-    req.flash("success", "Categoria desativada.");
+    // Desativar produtos órfãos que pertenciam a esta categoria
+    await Product.updateMany({ category: req.params.id, isActive: true }, { isActive: false });
+    req.flash("success", "Categoria desativada. Os produtos associados foram ocultados do catálogo.");
     res.redirect("/admin/categories");
   } catch (err) {
     next(err);
@@ -153,7 +169,7 @@ async function forceCancelOrder(req, res, next) {
       req.flash("success", "Encomenda cancelada.");
     } catch (err) {
       req.flash("error", `Não foi possível cancelar a encomenda: ${err.message}`);
-      next(err);
+      return next(err);
     }
     res.redirect("/admin/orders");
   } catch (err) {
@@ -168,10 +184,7 @@ async function coupons(req, res, next) {
       ...c,
       sentCount: Array.isArray(c.sentToUsers) ? c.sentToUsers.length : 0
     }));
-    res.render("admin/coupons", {
-      title: "Cupões Globais",
-      coupons: couponsWithStats
-    });
+    res.render("admin/coupons", { title: "Cupões Globais", coupons: couponsWithStats });
   } catch (err) {
     next(err);
   }
@@ -188,7 +201,6 @@ async function createCoupon(req, res, next) {
     const minOrderValue = parseFloat(req.body.minOrderValue || 0);
     const maxUses = parseInt(req.body.maxUses, 10);
 
-    // Validação básica 
     if (!code) {
       req.flash("error", "Código do cupão é obrigatório.");
       return res.redirect("/admin/coupons/create");
@@ -221,15 +233,14 @@ async function createCoupon(req, res, next) {
         sentToUsers: []
       });
       req.flash("success", "Cupão criado.");
+      return res.redirect("/admin/coupons");
     } catch (err) {
       if (err.code === 11000) {
         req.flash("error", "Já existe um cupão global com este código.");
-      } else {
-        req.flash("error", "Erro ao criar cupão: " + err.message);
+        return res.redirect("/admin/coupons/create");
       }
-      next(err);
+      return next(err);
     }
-    res.redirect("/admin/coupons");
   } catch (err) {
     next(err);
   }
@@ -294,7 +305,7 @@ async function sendCoupon(req, res, next) {
       req.flash("success", `Cupão enviado a ${result.sentCount} utilizador(es).`);
     } catch (err) {
       req.flash("error", err.message || "Falha ao enviar cupão.");
-      next(err);
+      return next(err);
     }
     res.redirect("/admin/coupons");
   } catch (err) {
@@ -306,7 +317,7 @@ async function hideReview(req, res, next) {
   try {
     await Review.findByIdAndUpdate(req.params.id, { isVisible: false });
     req.flash("success", "Review ocultada.");
-    res.redirect("back");
+    res.redirect("/admin/orders");
   } catch (err) {
     next(err);
   }

@@ -1,31 +1,6 @@
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
 
-/**
- * Valida se a transição para um novo estado é permitida de acordo com as regras de negócio.
- */
-async function updateOrderStatus(orderId, newStatus) {
-  const order = await Order.findById(orderId);
-  if (!order) {
-    throw new Error("Encomenda não encontrada.");
-  }
-
-  const rules = {
-    'pending': ['confirmed', 'cancelled'],
-    'confirmed': ['preparing'],
-    'preparing': ['ready'],
-    'ready': ['in_delivery'],
-    'in_delivery': ['delivered']
-  };
-
-  // Verifica se o estado atual existe nas regras e se a transição é válida
-  if (!rules[order.status] || !rules[order.status].includes(newStatus)) {
-    throw new Error(`Transição de ${order.status} para ${newStatus} não permitida.`);
-  }
-
-  return order;
-}
-
 async function getGlobalStats() {
   const [byStatus, totals] = await Promise.all([
     Order.aggregate([
@@ -75,10 +50,7 @@ async function statsPage(req, res, next) {
     ]);
     return res.render("admin/order-stats", { title: "Estatísticas de Encomendas", stats, revenueBySupermarket });
   } catch (err) {
-    console.error("order.controller statsPage:", err.message);
-    req.flash("error", "Erro ao carregar estatísticas.");
     next(err);
-    return res.redirect("/admin/orders");
   }
 }
 
@@ -87,10 +59,7 @@ async function clientHistory(req, res, next) {
     const orders = await getOrdersByClient(req.params.id);
     return res.render("admin/client-orders", { title: "Histórico do Cliente", orders, clientId: req.params.id });
   } catch (err) {
-    console.error("order.controller clientHistory:", err.message);
-    req.flash("error", "Erro ao carregar encomendas do cliente.");
     next(err);
-    return res.redirect("/admin/users");
   }
 }
 

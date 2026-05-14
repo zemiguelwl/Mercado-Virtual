@@ -1,14 +1,15 @@
 const Order = require("../models/Order");
 const Delivery = require("../models/Delivery");
+const Product = require("../models/Product");
+const Coupon = require("../models/Coupon");
 const User = require("../models/User");
 const emailService = require("./email.service");
 
-// Define transições válidas de estado para o ciclo de vida da encomenda.
 const VALID_TRANSITIONS = {
   pending:     ["confirmed", "cancelled"],
   confirmed:   ["preparing", "cancelled"],
-  preparing:   ["ready", "cancelled"],           
-  ready:       ["in_delivery", "delivered", "cancelled"], 
+  preparing:   ["ready", "cancelled"],
+  ready:       ["in_delivery", "delivered", "cancelled"],
   in_delivery: ["delivered", "cancelled"],
   delivered:   [],
   cancelled:   []
@@ -41,34 +42,38 @@ async function transitionOrderStatus(orderId, newStatus, changedByUserId, reason
   if (newStatus === "confirmed") {
     order.confirmedAt = new Date();
 
-    // O estafeta pode aceitar logo que o supermercado confirma, sem bloquear a preparação.
     if (order.deliveryMethod === "courier") {
       const existing = await Delivery.findOne({ order: order._id, status: { $ne: "cancelled" } });
       if (!existing) {
-        console.log(`[DEBUG] Criando nova Delivery para Order: ${order._id}`);
         await Delivery.create({
           order: order._id,
           supermarket: order.supermarket,
           status: "available",
           statusHistory: [{ status: "available", changedBy: changedByUserId }]
         });
-        console.log(`[DEBUG] Delivery criada com sucesso como 'available'`);
-      } else {
-        console.log(`[DEBUG] Delivery já existe para esta Order. Estado: ${existing.status}`);
       }
     }
   }
 
-  if (newStatus === "ready") {
-    // Sincronizar com a Delivery para que o estafeta saiba que pode levantar
-    const delivery = await Delivery.findOne({ order: order._id, status: "accepted" });
-    if (delivery) {
-      console.log(`[DEBUG] Sincronizando Delivery para 'ready' (Order: ${order._id})`);
-    }
-  }
-
   if (newStatus === "cancelled") {
-    // Se houver uma delivery ligada a esta encomenda, cancelá-la também.
+    // Restaurar stock dos produtos da encomenda
+    if (order.items && order.items.length) {
+      await Promise.all(
+        order.items.map((item) =>
+          Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } })
+        )
+      );
+    }
+
+    // Devolver uso do cupão se existir
+    if (order.couponCode) {
+      await Coupon.updateOne(
+        { code: order.couponCode, currentUses: { $gt: 0 } },
+        { $inc: { currentUses: -1 } }
+      );
+    }
+
+    // Cancelar delivery associada
     const delivery = await Delivery.findOne({ order: order._id, status: { $in: ["available", "accepted", "picked_up"] } });
     if (delivery) {
       delivery.status = "cancelled";
@@ -79,7 +84,6 @@ async function transitionOrderStatus(orderId, newStatus, changedByUserId, reason
 
   await order.save();
 
-  // Uma falha de email não pode bloquear a transição de estado.
   try {
     const cancelReason = newStatus === "cancelled" ? reason : null;
     await emailService.sendOrderStatusUpdate(order, newStatus, cancelReason);
@@ -90,23 +94,11 @@ async function transitionOrderStatus(orderId, newStatus, changedByUserId, reason
   return order;
 }
 
-// O estafeta aceita a delivery (fica com courier atribuído) mas o order mantém o estado até o supermercado avançar para ready e o estafeta levantar o pedido.
 async function onCourierAcceptDelivery(deliveryId, courierId) {
-
-  console.log(`[DEBUG] Tentativa de aceitação - DeliveryID: ${deliveryId}, CourierID: ${courierId}`);
-  
-  // Garantir que o ID é tratado como um ObjectId válido para a consulta
-  const query = { _id: deliveryId };
   const deliveryCheck = await Delivery.findById(deliveryId).lean();
-  
-  if (!deliveryCheck) {
-    console.error(`[ERROR] Delivery não encontrada na BD para o ID: ${deliveryId}`);
-    throw new Error("Entrega não encontrada no sistema.");
-  }
-  
-  console.log(`[DEBUG] Estado atual da Delivery na BD: ${deliveryCheck.status}`);
+  if (!deliveryCheck) throw new Error("Entrega não encontrada no sistema.");
 
-  // findOneAndUpdate atómico: só um estafeta consegue transitar o estado de "available" para "accepted"
+  // Atômico: só um estafeta consegue transitar de "available" para "accepted"
   const delivery = await Delivery.findOneAndUpdate(
     { _id: deliveryId, status: "available" },
     {
@@ -120,7 +112,6 @@ async function onCourierAcceptDelivery(deliveryId, courierId) {
     throw new Error(`Entrega não disponível para aceitação (estado atual: ${deliveryCheck.status}).`);
   }
 
-  // A encomenda deve estar pelo menos confirmada pelo supermercado
   const validOrderStatuses = ["confirmed", "preparing", "ready"];
   if (!validOrderStatuses.includes(delivery.order.status)) {
     throw new Error(`A encomenda ainda está em estado ${delivery.order.status}. Aguarda confirmação.`);
@@ -129,7 +120,6 @@ async function onCourierAcceptDelivery(deliveryId, courierId) {
   return delivery;
 }
 
-// transiciona o order de "ready" para "in_delivery" quando o estafeta levanta o pedido.
 async function onCourierPickedUp(deliveryId, courierId) {
   const delivery = await Delivery.findOne({ _id: deliveryId, courier: courierId, status: "accepted" });
   if (!delivery) throw new Error("Entrega não encontrada ou não pertence ao courier.");
@@ -155,7 +145,7 @@ async function onCourierCancelDelivery(deliveryId, courierId, reason) {
     throw new Error("Só podes cancelar entregas aceites ou levantadas.");
   }
 
-  const previousOrderStatus = delivery.status === "picked_up" ? "preparing" : "confirmed";
+  const wasPickedUp = delivery.status === "picked_up";
 
   delivery.status = "available";
   delivery.courier = null;
@@ -168,20 +158,25 @@ async function onCourierCancelDelivery(deliveryId, courierId, reason) {
 
   const order = await Order.findById(delivery.order);
   if (!order) throw new Error("Encomenda associada não encontrada.");
-  // Repõe o order no estado anterior ao levantamento
-  order.status = previousOrderStatus;
-  order.statusHistory.push({
-    status: previousOrderStatus,
-    changedBy: courierId,
-    reason: "Courier cancelou entrega. Estado reposto."
-  });
-  await order.save();
 
-  try {
-    await emailService.sendOrderStatusUpdate(order, previousOrderStatus, null);
-  } catch (emailErr) {
-    console.error("onCourierCancelDelivery: falha ao enviar email:", emailErr.message);
+  if (wasPickedUp) {
+    // Ordem estava em in_delivery; repor para ready para que outro estafeta possa levantar
+    // Transição inversa intencional: o courier cancelou após levantar o pedido
+    order.status = "ready";
+    order.statusHistory.push({
+      status: "ready",
+      changedBy: courierId,
+      reason: "Courier cancelou após levantamento. Pronto para novo estafeta."
+    });
+    await order.save();
+
+    try {
+      await emailService.sendOrderStatusUpdate(order, "ready", null);
+    } catch (emailErr) {
+      console.error("onCourierCancelDelivery: falha ao enviar email:", emailErr.message);
+    }
   }
+  // Se estava apenas aceite (não levantado), a ordem mantém o seu estado atual
 
   return { order, delivery };
 }

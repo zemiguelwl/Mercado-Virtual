@@ -89,8 +89,12 @@ async function toggleOpen(req, res, next) {
 async function orders(req, res, next) {
   try {
     const statusOrder = ["pending", "confirmed", "preparing", "ready", "in_delivery", "delivered", "cancelled"];
-    const raw = await Order.find({ supermarket: req.session.user.supermarketId }).sort({ createdAt: -1 }).lean();
-    const orders = raw.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
+    const raw = await Order.find({ supermarket: req.session.user.supermarketId }).lean();
+    const orders = raw.sort((a, b) => {
+      const statusDiff = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+      if (statusDiff !== 0) return statusDiff;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
     res.render("supermarket/orders/index", { title: "Encomendas", orders });
   } catch (err) {
     next(err);
@@ -140,12 +144,37 @@ async function coupons(req, res, next) {
 
 async function createCoupon(req, res, next) {
   try {
+    const code = String(req.body.code || "").toUpperCase().trim();
+    const discountValue = parseFloat(req.body.discountValue);
+    const validDiscountTypes = ["percentage", "fixed_amount", "fixed_shipping"];
+
+    if (!code) {
+      req.flash("error", "Código do cupão é obrigatório.");
+      return res.redirect("/supermarket/coupons/create");
+    }
+    if (!validDiscountTypes.includes(req.body.discountType)) {
+      req.flash("error", "Tipo de desconto inválido.");
+      return res.redirect("/supermarket/coupons/create");
+    }
+    if (isNaN(discountValue) || discountValue < 0) {
+      req.flash("error", "Valor de desconto inválido.");
+      return res.redirect("/supermarket/coupons/create");
+    }
+    if (!req.body.validFrom || !req.body.validUntil) {
+      req.flash("error", "Datas de validade são obrigatórias.");
+      return res.redirect("/supermarket/coupons/create");
+    }
+    if (new Date(req.body.validFrom) >= new Date(req.body.validUntil)) {
+      req.flash("error", "A data de início deve ser anterior à data de fim.");
+      return res.redirect("/supermarket/coupons/create");
+    }
+
     try {
       await Coupon.create({
-        code: String(req.body.code || "").toUpperCase().trim(),
+        code,
         description: req.body.description || "",
         discountType: req.body.discountType,
-        discountValue: Number(req.body.discountValue),
+        discountValue,
         minOrderValue: Number(req.body.minOrderValue || 0),
         maxUses: Number(req.body.maxUses) > 0 ? Number(req.body.maxUses) : null,
         validFrom: req.body.validFrom,
@@ -232,7 +261,16 @@ async function replyReview(req, res, next) {
     if (!review || String(review.targetId) !== String(req.session.user.supermarketId)) {
       return res.status(403).render("errors/403", { message: "Sem permissão." });
     }
-    await Review.findByIdAndUpdate(req.params.id, { "reply.text": req.body.reply, "reply.repliedAt": new Date() });
+    const replyText = String(req.body.reply || "").trim();
+    if (!replyText) {
+      req.flash("error", "A resposta não pode estar vazia.");
+      return res.redirect("/supermarket/reviews");
+    }
+    if (replyText.length > 500) {
+      req.flash("error", "A resposta não pode ter mais de 500 caracteres.");
+      return res.redirect("/supermarket/reviews");
+    }
+    await Review.findByIdAndUpdate(req.params.id, { "reply.text": replyText, "reply.repliedAt": new Date() });
     req.flash("success", "Resposta publicada.");
     res.redirect("/supermarket/reviews");
   } catch (err) {

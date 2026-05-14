@@ -1,0 +1,8 @@
+.orders-page { padding: 24px; max-width: 800px; margin: 0 auto; }
+.loading-state, .empty-state { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 64px; color: #777; }
+.empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; }
+.orders-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.order-card { cursor: pointer; transition: box-shadow 0.2s; }
+.order-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.status-chip { margin-left: 8px; font-size: 0.75rem; }
+.order-summary { display: flex; justify-content: space-between; margin-top: 8px; }

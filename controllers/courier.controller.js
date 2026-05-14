@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
 const Delivery = require("../models/Delivery");
 const Review = require("../models/Review");
+const deliveryService = require("../services/delivery.service");
 const { onCourierAcceptDelivery, onCourierPickedUp, onCourierCancelDelivery, onCourierDelivered } = require("../services/order.service");
 
 async function dashboard(req, res, next) {
   try {
     const courierId = req.session.user.id;
     const [activeDelivery, totalDeliveries, topSupermarkets] = await Promise.all([
-      Delivery.findOne({ courier: courierId, status: { $in: ["accepted", "picked_up"] } }).populate("order").lean(),
+      deliveryService.getActiveDelivery(courierId),
       Delivery.countDocuments({ courier: courierId, status: "delivered" }),
       Delivery.aggregate([
-        { $match: { courier: new mongoose.Types.ObjectId(req.session.user.id), status: "delivered" } },
+        { $match: { courier: new mongoose.Types.ObjectId(courierId), status: "delivered" } },
         { $group: { _id: "$supermarket", total: { $sum: 1 } } },
         { $sort: { total: -1 } },
         { $limit: 5 },
@@ -26,27 +27,15 @@ async function dashboard(req, res, next) {
         { $project: { _id: 0, supermarketName: "$supermarket.name", total: 1 } }
       ])
     ]);
-    // Extrair a activeOrder da entrega populada
-    let activeOrder = activeDelivery?.order || null;
 
-    // DEBUG: Verificar o que está a ser enviado para a vista
-    console.log(`[DEBUG Dashboard] Delivery ID: ${activeDelivery?._id}`);
-    console.log(`[DEBUG Dashboard] Delivery Status: ${activeDelivery?.status}`);
-    console.log(`[DEBUG Dashboard] Order Status via Populate: ${activeOrder?.status}`);
+    const activeOrder = activeDelivery?.order || null;
 
-    // Se por alguma razão o populate falhou mas temos o ID, tentamos carregar manualmente
-    if (!activeOrder && activeDelivery?.order) {
-      const Order = require("../models/Order");
-      activeOrder = await Order.findById(activeDelivery.order).lean();
-      console.log(`[DEBUG Dashboard] Order Status via Manual Fetch: ${activeOrder?.status}`);
-    }
-
-    res.render("courier/dashboard", { 
-      title: "Dashboard Estafeta", 
-      activeDelivery, 
-      activeOrder, 
-      totalDeliveries, 
-      topSupermarkets 
+    res.render("courier/dashboard", {
+      title: "Dashboard Estafeta",
+      activeDelivery,
+      activeOrder,
+      totalDeliveries,
+      topSupermarkets
     });
   } catch (err) {
     next(err);
@@ -55,7 +44,7 @@ async function dashboard(req, res, next) {
 
 async function available(req, res, next) {
   try {
-    const deliveries = await Delivery.find({ status: "available" }).populate("order").populate("supermarket", "name location").lean();
+    const deliveries = await deliveryService.getAvailableDeliveries();
     res.render("courier/available", { title: "Entregas Disponíveis", deliveries });
   } catch (err) {
     next(err);
@@ -67,21 +56,16 @@ async function accept(req, res, next) {
     const courierId = req.session.user.id;
     const deliveryId = req.params.id;
 
-    // 1. Verificar se o estafeta já tem uma entrega ativa
-    const activeDelivery = await Delivery.findOne({ courier: courierId, status: { $in: ["accepted", "picked_up"] } });
-    if (activeDelivery) {
+    const alreadyActive = await deliveryService.hasActiveDelivery(courierId);
+    if (alreadyActive) {
       req.flash("error", "Já tens uma entrega ativa.");
       return res.redirect("/courier/available");
     }
 
-    // 2. lógica de aceitação e validação ao serviço
     await onCourierAcceptDelivery(deliveryId, courierId);
-
     req.flash("success", "Entrega aceite.");
     res.redirect("/courier/dashboard");
   } catch (err) {
-    // Capturar qualquer erro do serviço e mostrar ao utilizador 
-    console.error(`[CONTROLLER ERROR] Falha na aceitação: ${err.message}`);
     req.flash("error", err.message);
     return res.redirect("/courier/available");
   }
@@ -128,7 +112,7 @@ async function cancel(req, res, next) {
 
 async function history(req, res, next) {
   try {
-    const deliveries = await Delivery.find({ courier: req.session.user.id }).populate("order").sort({ createdAt: -1 }).lean();
+    const deliveries = await deliveryService.getCourierHistory(req.session.user.id);
     res.render("courier/history", { title: "Histórico", deliveries });
   } catch (err) {
     next(err);

@@ -1,0 +1,12 @@
+.profile-page { padding: 24px; max-width: 900px; margin: 0 auto; }
+.loading-state { display: flex; justify-content: center; padding: 64px; }
+.profile-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 640px) { .profile-layout { grid-template-columns: 1fr; } }
+.full-width { width: 100%; margin-bottom: 8px; }
+.success-msg { color: #2e7d32; background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 12px; }
+.error-msg { display: block; margin-bottom: 12px; }
+mat-card-actions { display: flex; gap: 8px; padding: 8px 16px 16px; }
+.stats-col { display: flex; flex-direction: column; gap: 20px; }
+.stat-number { font-size: 3rem; font-weight: 700; color: #1565c0; margin: 0; }
+.stat-label { color: #777; margin: 4px 0 0; }
+.top-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }

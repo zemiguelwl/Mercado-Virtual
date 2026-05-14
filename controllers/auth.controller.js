@@ -193,7 +193,11 @@ async function resendVerification(req, res, next) {
 
 function safeInternalNext(body) {
   const raw = typeof body?.next === "string" ? body.next : "";
-  return raw.startsWith("/") && !raw.startsWith("//") ? raw : "";
+  // Bloquear protocol-relative (//) e backslash (/\) usados para open redirect
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return "";
+  // Apenas permitir caminhos internos com caracteres seguros
+  if (!/^\/[a-zA-Z0-9/_\-?=&%#.]*$/.test(raw)) return "";
+  return raw;
 }
 
 async function processLogin(req, res, next) {
@@ -271,7 +275,10 @@ async function processLogin(req, res, next) {
 }
 
 function logout(req, res) {
-  req.session.destroy(() => res.redirect("/catalog"));
+  req.session.destroy((err) => {
+    if (err) console.error("Erro ao destruir sessão:", err);
+    res.redirect("/catalog");
+  });
 }
 
 module.exports = { showLogin, showRegister, register, showVerifyEmail, verifyEmail, resendVerification, processLogin, logout };

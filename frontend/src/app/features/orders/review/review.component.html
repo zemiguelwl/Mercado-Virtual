@@ -1,0 +1,54 @@
+<div class="review-page">
+  <div *ngIf="loading" class="loading-state"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <div *ngIf="!loading && order">
+    <div class="review-header">
+      <button mat-button [routerLink]="['/orders', order._id]"><mat-icon>arrow_back</mat-icon> Voltar</button>
+      <h2>Avaliar encomenda #{{ order._id.slice(-6).toUpperCase() }}</h2>
+    </div>
+
+    <mat-error *ngIf="errorMessage" class="error-box">{{ errorMessage }}</mat-error>
+
+    <mat-card class="review-card">
+      <mat-card-content>
+        <!-- Avaliação do supermercado -->
+        <h3>{{ order.supermarket?.name }}</h3>
+        <div class="stars-row">
+          <mat-icon *ngFor="let s of stars"
+            [class.filled]="s <= form.supermarketRating"
+            (click)="setStar('supermarket', s)"
+            class="star-icon">
+            {{ s <= form.supermarketRating ? 'star' : 'star_border' }}
+          </mat-icon>
+        </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Comentário (opcional)</mat-label>
+          <textarea matInput [(ngModel)]="form.supermarketComment" rows="3" maxlength="500"></textarea>
+        </mat-form-field>
+
+        <!-- Avaliação do estafeta -->
+        <div *ngIf="order.deliveryMethod === 'courier' && delivery?.courier">
+          <mat-divider class="divider"></mat-divider>
+          <h3>Estafeta: {{ delivery.courier.name }}</h3>
+          <div class="stars-row">
+            <mat-icon *ngFor="let s of stars"
+              [class.filled]="s <= form.courierRating"
+              (click)="setStar('courier', s)"
+              class="star-icon">
+              {{ s <= form.courierRating ? 'star' : 'star_border' }}
+            </mat-icon>
+          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Comentário (opcional)</mat-label>
+            <textarea matInput [(ngModel)]="form.courierComment" rows="3" maxlength="500"></textarea>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="submitting">
+          {{ submitting ? 'A submeter...' : 'Submeter avaliação' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>
